@@ -14,57 +14,59 @@
 Servo servoX;
 Servo servoY;
 
-int xPosition = 89;
-int yPosition = 69;
-String dir = "pos";
+// Values we want to store on dweet.io
+int xPosition;
+int yPosition;
+String dir;
 
 int sensorValue = 0;
 int adjInterval = 15; // The time for next angle adjustment in minutes
-int sleepTime = 60;
 
 // WiFi credentials here
 
-//const char* host = "dweet.io";
 WiFiClient client;
 
-String responseJson;
+String content;
 int hour;
 
 /*
- * Run once upon startup, or after returning from sleep
- */
+   Run once upon startup, or after returning from sleep
+*/
 void setup() {
   Serial.begin(115200);
   Serial.println();
 
-  // Get the time of day from a simple GET request to dweet.io
-  // We need to check to see if the sun is close to setting
-  int sleepTime = 5; // Set to 60 seconds for testing
+  int sleepTime = 10; // Set to 60 seconds for testing
 
   // Connect to WiFi network
-  WiFi.begin(ssid, password);
+  //  WiFi.begin(ssid, password);
 
   getDweet();
-
-  delay(2000);
+  xPosition = parseContent("x").toInt();
+  yPosition = parseContent("y").toInt();
+  Serial.println("x: " + String(xPosition));
+  Serial.println("y: " + String(yPosition));
+  
+  xPosition++;
+  yPosition++;
 
   sendDweet("x=" + String(xPosition) + "&y=" + String(yPosition) + "&direction=" + dir);
 
   // If we got a response with the date and time from dweet, parse hours and minutes
   // If no response, set sleep time to one second and try again
-//  if (timeOfDay.length() > 0) {
-//    Serial.print("Hour: ");
-//    Serial.println(getHour(timeOfDay));
-//
-//    Serial.print("Minutes: ");
-//    Serial.println(getMinutes(timeOfDay));
-//
-//    Serial.print("Time: ");
-//    Serial.println(timeOfDay);
-//  } else {
-//    sleepTime = 1;
-//    Serial.println("timeOfDay was empty...");
-//  }
+  //  if (timeOfDay.length() > 0) {
+  //    Serial.print("Hour: ");
+  //    Serial.println(getHour(timeOfDay));
+  //
+  //    Serial.print("Minutes: ");
+  //    Serial.println(getMinutes(timeOfDay));
+  //
+  //    Serial.print("Time: ");
+  //    Serial.println(timeOfDay);
+  //  } else {
+  //    sleepTime = 1;
+  //    Serial.println("timeOfDay was empty...");
+  //  }
 
   // Set servos to neurtal position
   //  xPosition = 90;
@@ -75,9 +77,9 @@ void setup() {
   //  servoY.write(yPosition);
 
   // Get initial reading of sensor
-//  sensorValue = analogRead(A0);
+  //  sensorValue = analogRead(A0);
   // Scan to find the highest light reading
-//  initialScan();
+  //  initialScan();
   Serial.println("");
   Serial.println("Good night...");
   ESP.deepSleep(sleepTime * 1000000);
@@ -103,22 +105,15 @@ void loop() {
   // Record direction of movement for Y
   adjustAngleY();
 
-//  Serial.println(sensorValue);
-}
-
-void connectToDweetServer() {
-  if (!client.connect("dweet.io", 80)) {
-    Serial.println("connection failed");
-    return;
-  }
+  //  Serial.println(sensorValue);
 }
 
 /*
- * Send some data to dweet.io
- * 
- * @param params - The URL parameters to include with the request. i.e. "position=72&value=1500"
- * This data will be stored and can later be retrieved as Json using getDweet()
- */
+   Send some data to dweet.io
+
+   @param params - The URL parameters to include with the request. i.e. "position=72&value=1500"
+   This data will be stored and can later be retrieved as Json using getDweet()
+*/
 void sendDweet(String params) {
   connectToDweetServer();
   Serial.println("");
@@ -139,10 +134,16 @@ void getDweet() {
   parseResponse();
 }
 
+void connectToDweetServer() {
+  if (!client.connect("dweet.io", 80)) {
+    Serial.println("connection failed");
+    return;
+  }
+}
 
 /*
- * Get the hour and the json String from a GET request
- */
+   Get the hour and the json String from a GET request
+*/
 void parseResponse() {
   unsigned long timeout = millis();
   while (client.available() == 0) {
@@ -154,7 +155,6 @@ void parseResponse() {
   }
   while (client.available()) {
     String line = client.readStringUntil('\r');
-//    Serial.print(line);
     // Get the time
     if (line.indexOf("Date:") > -1) {
       String timeOfDay = getSubstring(line, ' ', 5);
@@ -162,12 +162,22 @@ void parseResponse() {
       hour = (getSubstring(timeOfDay, ':', 0).toInt() + 17) % 24;
       Serial.println("hour: " + String(hour));
     }
-    // Get the response Json
+    // Get the content from response Json
     if (line.indexOf('{') > -1) {
-      responseJson = line;
-      Serial.println(line);
+      content = line.substring(line.indexOf("\"content\":{") + 11, line.indexOf("}"));
     }
   }
+}
+
+String parseContent(String key) {
+  String value;
+  for (int i = 0; i < 3; i++) {
+    String subString = getSubstring(content, ',', i);
+    if (subString.indexOf(key) == 1) {
+      value = subString.substring(subString.indexOf(':') + 1);
+    }
+  }
+  return value;
 }
 
 void adjustAngleX() {
