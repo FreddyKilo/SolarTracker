@@ -2,15 +2,14 @@
    ##### ToDo list #####
 
     Sleep from sundown to sunrise
-    Log positions with datetime
     Test current draw from system
     Prototype servo
-
 */
 
 #include <Servo.h>
 #include <ESP8266WiFi.h>
 
+WiFiClient client;
 Servo servoX;
 Servo servoY;
 
@@ -20,12 +19,11 @@ int yPosition;
 String dir;
 
 int sensorValue = 0;
-int adjInterval = 15; // The time for next angle adjustment in minutes
+int adjInterval = 30; // The time for next angle adjustment in minutes
 
 // WiFi credentials here
 
-WiFiClient client;
-
+// Values to store and use later
 String content;
 int hour;
 
@@ -36,41 +34,23 @@ void setup() {
   Serial.begin(115200);
   Serial.println();
 
-  int sleepTime = 10; // Set to 60 seconds for testing
+  int sleepTime = 2;
 
   // Connect to WiFi network
-  //  WiFi.begin(ssid, password);
+//  WiFi.begin(ssid, password);
 
   getDweet();
   xPosition = parseContent("x").toInt();
   yPosition = parseContent("y").toInt();
   Serial.println("x: " + String(xPosition));
   Serial.println("y: " + String(yPosition));
+  dir = "positive";
   
-  xPosition++;
-  yPosition++;
+  xPosition = random(0, 180);
+  yPosition = random(30, 150);
 
   sendDweet("x=" + String(xPosition) + "&y=" + String(yPosition) + "&direction=" + dir);
 
-  // If we got a response with the date and time from dweet, parse hours and minutes
-  // If no response, set sleep time to one second and try again
-  //  if (timeOfDay.length() > 0) {
-  //    Serial.print("Hour: ");
-  //    Serial.println(getHour(timeOfDay));
-  //
-  //    Serial.print("Minutes: ");
-  //    Serial.println(getMinutes(timeOfDay));
-  //
-  //    Serial.print("Time: ");
-  //    Serial.println(timeOfDay);
-  //  } else {
-  //    sleepTime = 1;
-  //    Serial.println("timeOfDay was empty...");
-  //  }
-
-  // Set servos to neurtal position
-  //  xPosition = 90;
-  //  yPosition = 90;
   //  servoX.attach(0);
   //  servoY.attach(1);
   //  servoX.write(xPosition);
@@ -158,7 +138,6 @@ void parseResponse() {
     // Get the time
     if (line.indexOf("Date:") > -1) {
       String timeOfDay = getSubstring(line, ' ', 5);
-      Serial.println("timeOfDay: " + timeOfDay);
       hour = (getSubstring(timeOfDay, ':', 0).toInt() + 17) % 24;
       Serial.println("hour: " + String(hour));
     }
