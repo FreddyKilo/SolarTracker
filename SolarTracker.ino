@@ -14,11 +14,13 @@
 Servo servoX;
 Servo servoY;
 
-int xPosition;
-int yPosition;
+int xPosition = 89;
+int yPosition = 69;
+String dir = "pos";
 
 int sensorValue = 0;
 int adjInterval = 15; // The time for next angle adjustment in minutes
+int sleepTime = 60;
 
 // WiFi credentials here
 
@@ -33,23 +35,20 @@ int hour;
  */
 void setup() {
   Serial.begin(115200);
+  Serial.println();
 
   // Get the time of day from a simple GET request to dweet.io
   // We need to check to see if the sun is close to setting
   int sleepTime = 5; // Set to 60 seconds for testing
 
-  // Connect to wifi and server
+  // Connect to WiFi network
   WiFi.begin(ssid, password);
-  if (!client.connect("dweet.io", 80)) {
-    Serial.println("connection failed");
-    return;
-  }
-  
-//  sendDweet("x-position=" + xPosition + "&y-position=" + yPosition);
+
+  getDweet();
 
   delay(2000);
 
-  getDweet();
+  sendDweet("x=" + String(xPosition) + "&y=" + String(yPosition) + "&direction=" + dir);
 
   // If we got a response with the date and time from dweet, parse hours and minutes
   // If no response, set sleep time to one second and try again
@@ -79,8 +78,9 @@ void setup() {
 //  sensorValue = analogRead(A0);
   // Scan to find the highest light reading
 //  initialScan();
-//  Serial.println("Going to sleep...");
-//  ESP.deepSleep(sleepTime * 1000000);
+  Serial.println("");
+  Serial.println("Good night...");
+  ESP.deepSleep(sleepTime * 1000000);
 }
 
 void initialScan() {
@@ -93,7 +93,6 @@ void initialScan() {
 }
 
 void loop() {
-  ESP.deepSleep(1000); // Sleep for a millis. We just want to reset the device because we never got the time, which we really need.
 
   // See if we can find a higher reading in X (east/west)
   // Record the direction of movement from origin (pos or neg) and assume the next
@@ -104,7 +103,14 @@ void loop() {
   // Record direction of movement for Y
   adjustAngleY();
 
-  Serial.println(sensorValue);
+//  Serial.println(sensorValue);
+}
+
+void connectToDweetServer() {
+  if (!client.connect("dweet.io", 80)) {
+    Serial.println("connection failed");
+    return;
+  }
 }
 
 /*
@@ -114,7 +120,8 @@ void loop() {
  * This data will be stored and can later be retrieved as Json using getDweet()
  */
 void sendDweet(String params) {
-  Serial.println();
+  connectToDweetServer();
+  Serial.println("");
   Serial.println("Sending dweet");
   client.print(String("GET /dweet/for/mr-roboto?" + params) + " HTTP/1.1\r\n" +
                "Host: " + "dweet.io" + "\r\n" +
@@ -123,7 +130,8 @@ void sendDweet(String params) {
 }
 
 void getDweet() {
-  Serial.println();
+  connectToDweetServer();
+  Serial.println("");
   Serial.println("Getting dweet");
   client.print(String("GET /get/latest/dweet/for/mr-roboto") + " HTTP/1.1\r\n" +
                "Host: " + "dweet.io" + "\r\n" +
@@ -136,24 +144,28 @@ void getDweet() {
  * Get the hour and the json String from a GET request
  */
 void parseResponse() {
-  delay(100);
+  unsigned long timeout = millis();
+  while (client.available() == 0) {
+    if (millis() - timeout > 5000) {
+      Serial.println(">>> Client Timeout !");
+      client.stop();
+      return;
+    }
+  }
   while (client.available()) {
     String line = client.readStringUntil('\r');
+//    Serial.print(line);
     // Get the time
     if (line.indexOf("Date:") > -1) {
-      Serial.println("Got the time of day and Hour!");
       String timeOfDay = getSubstring(line, ' ', 5);
-      // If we didn't get the time, return and call loop() to reset device
-      if (timeOfDay.length() == 0) {
-        return;
-      }
+      Serial.println("timeOfDay: " + timeOfDay);
       hour = (getSubstring(timeOfDay, ':', 0).toInt() + 17) % 24;
+      Serial.println("hour: " + String(hour));
     }
     // Get the response Json
     if (line.indexOf('{') > -1) {
-      Serial.println("Got the response Json!");
       responseJson = line;
-      Serial.print(line);
+      Serial.println(line);
     }
   }
 }
@@ -173,7 +185,7 @@ void adjustAngleY() {
    @param line - The original String
    @param separator - The char(s) at where to separate
    @param index - The index of the substring to return
-   @returns - The substring at given index
+   @returns - The substring at given index or empty String if not found
 */
 String getSubstring(String line, char separator, int index) {
   int found = 0;
