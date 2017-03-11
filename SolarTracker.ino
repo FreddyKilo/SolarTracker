@@ -18,7 +18,7 @@ int xPosition;
 int yPosition;
 String dir;
 
-int sensorValue = 0;
+int sensorValue;
 int adjInterval = 30; // The time for next angle adjustment in minutes
 
 // WiFi credentials here
@@ -26,6 +26,9 @@ int adjInterval = 30; // The time for next angle adjustment in minutes
 // Values to store and use later
 String content;
 int hour;
+int minutes;
+String timeSuffix = "am";
+int sleepTime = 60;
 
 /*
    Run once upon startup, or after returning from sleep
@@ -34,22 +37,41 @@ void setup() {
   Serial.begin(115200);
   Serial.println();
 
-  int sleepTime = 2;
-
   // Connect to WiFi network
 //  WiFi.begin(ssid, password);
 
   getDweet();
   xPosition = parseContent("x").toInt();
   yPosition = parseContent("y").toInt();
+  String timeOfDay = parseContent("time");
+  Serial.println(timeOfDay);
+  sensorValue = analogRead(A0);
+  
   Serial.println("x: " + String(xPosition));
   Serial.println("y: " + String(yPosition));
+  Serial.println("light: " + String(sensorValue));
   dir = "positive";
   
   xPosition = random(0, 180);
   yPosition = random(30, 150);
 
-  sendDweet("x=" + String(xPosition) + "&y=" + String(yPosition) + "&direction=" + dir);
+  String strMinutes;
+  if (minutes < 10) {
+    strMinutes = "0" + String(minutes);
+  } else {
+    strMinutes = String(minutes);
+  }
+
+  if (hour > 11) {
+    timeSuffix = "pm";
+    hour = hour % 12;
+  }
+  
+  sendDweet("x=" + String(xPosition) +
+            "&y=" + String(yPosition) +
+            "&direction=" + dir +
+            "&light=" + String(sensorValue) +
+            "&time=" + String(hour) + ":" + strMinutes + timeSuffix);
 
   //  servoX.attach(0);
   //  servoY.attach(1);
@@ -130,6 +152,7 @@ void parseResponse() {
     if (millis() - timeout > 5000) {
       Serial.println(">>> Client Timeout !");
       client.stop();
+      sleepTime = 1;
       return;
     }
   }
@@ -139,6 +162,7 @@ void parseResponse() {
     if (line.indexOf("Date:") > -1) {
       String timeOfDay = getSubstring(line, ' ', 5);
       hour = (getSubstring(timeOfDay, ':', 0).toInt() + 17) % 24;
+      minutes = (getSubstring(timeOfDay, ':', 1).toInt());
       Serial.println("hour: " + String(hour));
     }
     // Get the content from response Json
@@ -150,7 +174,7 @@ void parseResponse() {
 
 String parseContent(String key) {
   String value;
-  for (int i = 0; i < 3; i++) {
+  for (int i = 0; i < 5; i++) {
     String subString = getSubstring(content, ',', i);
     if (subString.indexOf(key) == 1) {
       value = subString.substring(subString.indexOf(':') + 1);
