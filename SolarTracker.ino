@@ -26,17 +26,32 @@ int overnightSleepTime = 1800; // 3600 sec = 1 hour
 unsigned long oneSecond = 1000000L;
 
 /*
-	Run this for test
+	Setup for test
 */
-void setup() {
+void setupx() {
 	Serial.begin(115200);
 }
 
-void setupx() {
+/*
+	Setup for application
+*/
+void setup() {
 	Serial.begin(115200);
 
+	/* 
+		Declare all pins used for swiching inputs to analogRead(A0)
+		D2 - switch for current from solar panel reading
+		D3 - switch for voltage reading
+		D4 - switch for LDR reading
+	*/
+	pinMode(D2, OUTPUT);
 	pinMode(D3, OUTPUT);
 	pinMode(D4, OUTPUT);
+
+	// Initially set all pins to off
+	digitalWrite(D2, LOW);
+	digitalWrite(D3, LOW);
+	digitalWrite(D4, LOW);
 
 	// Connect to WiFi network
 	//    WiFi.begin(ssid, pass);
@@ -104,7 +119,6 @@ void setupx() {
 	*/
 
 	// Get current light reading
-
 	// If reading is less than last reading, we need to re-position. Use values from last reading
 	// to adjust position. If the direction of the last reading was positive, check for a greater
 	// reading in the positive direction. Keep track of light sensor value with coresponding servo
@@ -164,7 +178,8 @@ void setData(String params) {
 }
 
 /*
-	Make a call to dweet.io. Response is saved in <WiFiClient client> and is parsed with parseResponse()
+	Make a call to dweet.io. Response is saved in <WiFiClient client> and is parsed 
+	with parseResponse()
 */
 void getData() {
 	connectToDweetServer();
@@ -236,26 +251,43 @@ String getJsonValue(String key) {
 	return value;
 }
 
-int getLightValue() {
-	// switch to ldr sensor
-	digitalWrite(D3, LOW);
-	digitalWrite(D4, HIGH);
+float getCurrent() {
+	// switch to battery current input
+	digitalWrite(D2, HIGH);
 	delay(100);
 	int sensorValue = analogRead(A0);
-	int light = 1000 * sensorValue / 830;
 
-	return light / 10;
+	// Calculate current with reading, somehow
+	float current = 1.0;
+
+	digitalWrite(D2, LOW);
+	return current;
 }
 
 float getVoltage() {
-	// switch to battery input
-	digitalWrite(D4, LOW);
+	// switch to battery voltage input
 	digitalWrite(D3, HIGH);
 	delay(100);
 	int sensorValue = analogRead(A0);
 
-	float voltage = sensorValue * (4.2 / 713); // With our voltage divider, we get a reading of 710 at 4.2v;
+	// At 4.2v (max battery voltage) we get a reading of around 710
+	float voltage = 4.2 * sensorValue / 713;
+
+	digitalWrite(D3, LOW);
 	return voltage;
+}
+
+int getLightValue() {
+	// switch to ldr sensor
+	digitalWrite(D4, HIGH);
+	delay(100);
+	int sensorValue = analogRead(A0);
+
+	// In direct sunlight we get a reading of 830 and want our dashboard to have a max value of 100
+	int light = 100 * sensorValue / 830;
+
+	digitalWrite(D4, LOW);
+	return light;
 }
 
 void adjustAngleX(int degreeAmount) {
