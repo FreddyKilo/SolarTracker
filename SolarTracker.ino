@@ -1,6 +1,5 @@
 /*
 	##### ToDo list #####
-
 	Prototype servo
 */
 
@@ -21,20 +20,20 @@ String timeOfDay = "";
 int hour;
 int twelveHour;
 int minutes;
-String timeSuffix = "";
-int sleepTime = 300; // 300 sec = 5 min
+String timeSuffix = "a";
+int sleepTime = 600; // 300 sec = 5 min
+int overnightSleepTime = 1800; // 3600 sec = 1 hour
 unsigned long oneSecond = 1000000L;
 
 /*
 	Run this for test
 */
-void setupx() {
+void setup() {
 	Serial.begin(115200);
 }
 
-void setup() {
+void setupx() {
 	Serial.begin(115200);
-	Serial.println();
 
 	pinMode(D3, OUTPUT);
 	pinMode(D4, OUTPUT);
@@ -43,15 +42,15 @@ void setup() {
 	//    WiFi.begin(ssid, pass);
 
 	/*
-		 Get the values from the last dweet then use those values to help adjust the position
-		 of the solar panels to obtain max voltage
+		Get the values from the last dweet then use those values to help adjust the position
+		of the solar panels to obtain max voltage
 	*/
 
 	getData();
 	parseResponse();
 
 	if (timeOfDay.equals("")) {
-		ESP.reset();
+		ESP.deepSleep(oneSecond);
 	}
 
 	// Let's use the 12 hour clock system :)
@@ -61,6 +60,10 @@ void setup() {
 		if (hour > 12) {
 			twelveHour = hour % 12;
 		}
+	} else if (hour == 0) {
+		twelveHour = 12;
+	} else {
+		twelveHour = hour;
 	}
 
 	// If minutes are less than 10, we need to add a zero before the number i.e. 8 = 08
@@ -74,31 +77,30 @@ void setup() {
 	// If waking up from sunset, reset to morning position.
 	// If no morning postion, do an initial scan
 	// Else just get the previous readings
-	if (getValue("sunset").equals("true") && getValue("morningX").length() > 0) {
-		xPosition = getValue("morningX").toInt();
-		yPosition = getValue("morningY").toInt();
-	} else if (getValue("sunset").equals("true")) {
+	if (getJsonValue("sunset").equals("true") && getJsonValue("morningX").length() > 0) {
+		xPosition = getJsonValue("morningX").toInt();
+		yPosition = getJsonValue("morningY").toInt();
+	} else if (getJsonValue("sunset").equals("true")) {
 		initialScan();
 	} else {
-		xPosition = getValue("x").toInt();
-		yPosition = getValue("y").toInt();
-		//    dir = getValue("direction");
-		dir = "pos";
+		xPosition = getJsonValue("x").toInt();
+		yPosition = getJsonValue("y").toInt();
+		dir = getJsonValue("direction");
 	}
 
 	// If the hour is greater than 6pm (about sunset) and less than 7am (about sunrise), stop
 	// tracking and get the voltage reading periodically to monitor on freeboard
 	if (hour < 7 || hour > 18) {
 		setData("time=" + String(twelveHour) + ":" + strMinutes + timeSuffix +
-				"&sunset=" +
+				"&sunset=true" +
 				"&light=" +
 				"&voltage=" + String(getVoltage()));
 		Serial.println("See you in the morning...");
-		ESP.deepSleep(1800 * oneSecond);
+		ESP.deepSleep(overnightSleepTime * oneSecond);
 	}
 
 	/*
-		 Using previous values, make adjustments to get the most amount of sunlight possible
+		Using previous values, make adjustments to get the most amount of sunlight possible
 	*/
 
 	// Get current light reading
@@ -114,8 +116,11 @@ void setup() {
 	//  servoX.write(xPosition);
 	//  servoY.write(yPosition);
 
+	adjustAngleX(3);
+	adjustAngleY(1);
+
 	/*
-			Store current values for next position adjustment.
+		Store current values for next position adjustment.
 	*/
 
 	setData("x=" + String(xPosition) +
@@ -127,13 +132,12 @@ void setup() {
 			"&sunset=false");
 
 	// Sleep until next scheduled adjustment
-	Serial.println("");
 	Serial.println("Taking a nap...");
 	ESP.deepSleep(sleepTime * oneSecond);
 }
 
 /*
-	 This will be called if there were no previous recorded servo positions.
+	This will be called if there were no previous recorded servo positions.
 */
 void initialScan() {
 	// Move x-axis in the default direction while taking readings
@@ -145,10 +149,10 @@ void initialScan() {
 }
 
 /*
-	 Send some data to dweet.io
+	Send some data to dweet.io
 
-	 @param params - The URL parameters to include with the request. i.e. "position=72&value=1500"
-	 This data will be stored and can later be retrieved as Json using getData()
+	@param params - The URL parameters to include with the request. i.e. "position=72&value=1500"
+	This data will be stored and can later be retrieved as Json using getData()
 */
 void setData(String params) {
 	connectToDweetServer();
@@ -160,7 +164,7 @@ void setData(String params) {
 }
 
 /*
-	 Make a call to dweet.io. Response is saved in <WiFiClient client> and is parsed with parseResponse()
+	Make a call to dweet.io. Response is saved in <WiFiClient client> and is parsed with parseResponse()
 */
 void getData() {
 	connectToDweetServer();
@@ -172,7 +176,7 @@ void getData() {
 }
 
 /*
-	 Connect to dweet.io, this is where we will store our data
+	Connect to dweet.io, this is where we will store our data
 */
 void connectToDweetServer() {
 	if (!client.connect("dweet.io", 80)) {
@@ -182,23 +186,23 @@ void connectToDweetServer() {
 }
 
 /*
-	 Get the hour, minutes, and json String from a GET request
+	Get the hour, minutes, and json String from a GET request
 */
 void parseResponse() {
 	unsigned long timeout = millis();
 
 	while (client.available() == 0) {
 
+		// If the client times out, sleep 5 mins and try again
 		if (millis() - timeout > 5000) {
 			Serial.println(">>> Client Timeout !");
-			client.stop();
-			sleepTime = 1;
-			return;
+			ESP.deepSleep(300 * oneSecond);
 		}
 	}
 
 	while (client.available()) {
 		String line = client.readStringUntil('\r');
+		// Serial.println(line);
 
 		// Get the time
 		if (line.indexOf("Date:") > -1) {
@@ -209,17 +213,17 @@ void parseResponse() {
 
 		// Get the content from response Json
 		if (line.indexOf('{') > -1) {
-			jsonContent = line.substring(line.indexOf("\"jsonContent\":{") + 11, line.indexOf("}"));
+			jsonContent = line.substring(line.indexOf("\"content\":{") + 11, line.indexOf("}"));
 		}
 	}
 }
 
 /*
-	 Get a value from the content of the response Json
-	 @param key - The key associated with the value
-	 @returns - The value
+	Get a value from the content of the response Json
+	@param key - The key associated with the value
+	@returns - The value
 */
-String getValue(String key) {
+String getJsonValue(String key) {
 	String value;
 
 	for (int i = 0; i < 6; i++) {
@@ -254,22 +258,24 @@ float getVoltage() {
 	return voltage;
 }
 
-void adjustAngleX() {
-
+void adjustAngleX(int degreeAmount) {
+	xPosition = xPosition + degreeAmount;
+	servoX.write(xPosition);
 }
 
-void adjustAngleY() {
-
+void adjustAngleY(int degreeAmount) {
+	yPosition = yPosition + degreeAmount;
+	servoY.write(yPosition);
 }
 
 /*
-	 Got this from stack overflow https://goo.gl/HZIMaU
-	 Get a substring from a String.
+	Got this from stack overflow https://goo.gl/HZIMaU
+	Get a substring from a String.
 
-	 @param line - The original String
-	 @param separator - The char(s) at where to separate
-	 @param index - The index of the substring to return
-	 @returns - The substring at given index or empty String if not found
+	@param line - The original String
+	@param separator - The char(s) at where to separate
+	@param index - The index of the substring to return
+	@returns - The substring at given index or empty String if not found
 */
 String getSubstring(String line, char separator, int index) {
 	int found = 0;
@@ -287,7 +293,7 @@ String getSubstring(String line, char separator, int index) {
 }
 
 void loop() {
-	test();
+	testJson();
 
 	// See if we can find a higher reading in X (east/west)
 	// Record the direction of movement from origin (pos or neg) and assume the next
@@ -299,11 +305,21 @@ void loop() {
 	// adjustAngleY();
 }
 
-void test() {
+void testReadings() {
 	Serial.println("Voltage: " + String(getVoltage()));
 	delay(400);
 
 	Serial.println("Light: " + String(getLightValue()));
 	delay(400);
+}
+
+void testJson() {
+	getData();
+	parseResponse();
+	Serial.println("Value from \"voltage\": " + getJsonValue("voltage"));
+	Serial.println("Value from \"sunset\": " + getJsonValue("sunset"));
+	Serial.println("Value from \"time\": " + getJsonValue("time"));
+	Serial.println("Value from \"light\": " + getJsonValue("light"));
+	delay(5000);
 }
 
