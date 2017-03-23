@@ -28,14 +28,14 @@ unsigned long oneSecond = 1000000L;
 /*
 	Setup for test
 */
-void setupx() {
+void setup() {
 	Serial.begin(115200);
 }
 
 /*
 	Setup for application
 */
-void setup() {
+void setupx() {
 	Serial.begin(115200);
 
 	/* 
@@ -325,7 +325,7 @@ String getSubstring(String line, char separator, int index) {
 }
 
 void loop() {
-	testJson();
+	testServos();
 
 	// See if we can find a higher reading in X (east/west)
 	// Record the direction of movement from origin (pos or neg) and assume the next
@@ -353,5 +353,18 @@ void testJson() {
 	Serial.println("Value from \"time\": " + getJsonValue("time"));
 	Serial.println("Value from \"light\": " + getJsonValue("light"));
 	delay(5000);
+}
+
+void testServos() {
+	servoX.attach(D5);
+	servoY.attach(D6);
+	servoX.write(80);
+	delay(500);
+	servoX.write(100);
+	delay(500);
+	servoY.write(80);
+	delay(500);
+	servoY.write(100);
+	delay(500);
 }
 
