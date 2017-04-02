@@ -28,20 +28,20 @@ unsigned long oneSecond = 1000000L;
 /*
 	Setup for test
 */
-void setup() {
+void setupx() {
 	Serial.begin(115200);
 }
 
 /*
 	Setup for application
 */
-void setupx() {
+void setup() {
 	Serial.begin(115200);
 
 	/* 
 		Declare all pins used for swiching inputs to analogRead(A0)
 		D2 - switch for current from solar panel reading
-		D3 - switch for voltage reading
+		D3 - switch for battery voltage reading
 		D4 - switch for LDR reading
 	*/
 	pinMode(D2, OUTPUT);
@@ -68,13 +68,15 @@ void setupx() {
 		ESP.deepSleep(oneSecond);
 	}
 
-	// Let's use the 12 hour clock system :)
+	// Let's use the 12 hour clock system with AM and PM :)
 	if (hour > 11) {
-		twelveHour = hour;
 		timeSuffix = "p";
 		if (hour > 12) {
 			twelveHour = hour % 12;
+		} else {
+			twelveHour = hour;
 		}
+
 	} else if (hour == 0) {
 		twelveHour = 12;
 	} else {
@@ -139,7 +141,6 @@ void setupx() {
 
 	setData("x=" + String(xPosition) +
 			"&y=" + String(yPosition) +
-			"&direction=" + dir +
 			"&light=" + String(getLightValue()) +
 			"&voltage=" + String(getVoltage()) +
 			"&time=" + String(twelveHour) + ":" + strMinutes + timeSuffix +
@@ -283,11 +284,11 @@ int getLightValue() {
 	delay(100);
 	int sensorValue = analogRead(A0);
 
-	// In direct sunlight we get a reading of 830 and want our dashboard to have a max value of 100
-	int light = 100 * sensorValue / 830;
+	// In direct sunlight we get a reading of 800 and want our dashboard to have a max value of 100
+	// int light = 100 * sensorValue / 800;
 
 	digitalWrite(D4, LOW);
-	return light;
+	return sensorValue;
 }
 
 void adjustAngleX(int degreeAmount) {
@@ -325,7 +326,7 @@ String getSubstring(String line, char separator, int index) {
 }
 
 void loop() {
-	testServos();
+	testReadings();
 
 	// See if we can find a higher reading in X (east/west)
 	// Record the direction of movement from origin (pos or neg) and assume the next
@@ -338,8 +339,8 @@ void loop() {
 }
 
 void testReadings() {
-	Serial.println("Voltage: " + String(getVoltage()));
-	delay(400);
+	// Serial.println("Voltage: " + String(getVoltage()));
+	// delay(400);
 
 	Serial.println("Light: " + String(getLightValue()));
 	delay(400);
@@ -358,10 +359,10 @@ void testJson() {
 void testServos() {
 	servoX.attach(D5);
 	servoY.attach(D6);
-	servoX.write(80);
-	delay(500);
-	servoX.write(100);
-	delay(500);
+	servoX.write(50);
+	delay(1000);
+	servoX.write(150);
+	delay(1000);
 	servoY.write(80);
 	delay(500);
 	servoY.write(100);
