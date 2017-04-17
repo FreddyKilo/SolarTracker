@@ -3,16 +3,17 @@
 	Prototype servo
 */
 
-#include <Servo.h>
+#include <PololuMaestro.h>
 #include <ESP8266WiFi.h>
+#include <SoftwareSerial.h>
 
 WiFiClient client;
-Servo servoX;
-Servo servoY;
 
 // Values to store for later use
 int xPosition;
 int yPosition;
+int xIncrement = 10;
+int yIncrement = 10;
 String dir;
 
 String jsonContent;
@@ -21,15 +22,20 @@ int hour;
 int twelveHour;
 int minutes;
 String timeSuffix = "a";
-int sleepTime = 600; // 300 sec = 5 min
+int sleepTime = 1200; // 300 sec = 5 min
 int overnightSleepTime = 1800; // 3600 sec = 1 hour
 unsigned long oneSecond = 1000000L;
+
+// Servo controller communication
+SoftwareSerial maestroSerial(12, 14);
+MicroMaestro maestro(maestroSerial);
 
 /*
 	Setup for test
 */
 void setupx() {
 	Serial.begin(115200);
+	maestroSerial.begin(9600);
 }
 
 /*
@@ -37,6 +43,7 @@ void setupx() {
 */
 void setup() {
 	Serial.begin(115200);
+	maestroSerial.begin(9600);
 
 	/* 
 		Declare all pins used for swiching inputs to analogRead(A0)
@@ -55,21 +62,20 @@ void setup() {
 
 	// Connect to WiFi network
 	//    WiFi.begin(ssid, pass);
-
 	go();
 }
 
 void loop() {
-	testReadings();
+	testServos();
 
 	// See if we can find a higher reading in X (east/west)
 	// Record the direction of movement from origin (pos or neg) and assume the next
 	// movement should be in the same direction
-	// adjustAngleX();
+	// setServoX();
 
 	// Once we're good in X, let's find the highest reading for Y (north/south)
 	// Record direction of movement for Y
-	// adjustAngleY();
+	// setServoY();
 }
 
 void testReadings() {
@@ -91,15 +97,13 @@ void testJson() {
 }
 
 void testServos() {
-	servoX.attach(D5);
-	servoY.attach(D6);
-	servoX.write(50);
+	setServoY(100);
 	delay(1000);
-	servoX.write(150);
+	setServoX(80);
 	delay(1000);
-	servoY.write(80);
-	delay(500);
-	servoY.write(100);
-	delay(500);
+	setServoY(120);
+	delay(1000);
+	setServoX(100);
+	delay(1000);
 }
 

@@ -58,6 +58,8 @@ void go() {
 		ESP.deepSleep(overnightSleepTime * oneSecond);
 	}
 
+	initialScan();
+
 	/*
 		Using previous values, make adjustments to get the most amount of sunlight possible
 	*/
@@ -69,13 +71,9 @@ void go() {
 	// position. If there are more that 3 consecutive lesser readings, stop re-position and move to
 	// servo position mapped to highest sensor value.
 
-	//  servoX.attach(0);
-	//  servoY.attach(1);
-	//  servoX.write(xPosition);
-	//  servoY.write(yPosition);
-
-	adjustAngleX(3);
-	adjustAngleY(1);
+	// setServoX(xPosition);
+	// setServoY(yPosition);
+	// delay(2000);
 
 	/*
 		Store current values for next position adjustment.
@@ -91,4 +89,64 @@ void go() {
 	// Sleep until next scheduled adjustment
 	Serial.println("Taking a nap...");
 	ESP.deepSleep(sleepTime * oneSecond);
+}
+
+/*
+	This will be called if there were no previous recorded servo positions.
+*/
+void initialScan() {
+	// If it's passed noon, we want to start at 90 deg in the x axis
+	if (hour >= 13) {
+		xPosition = 85;
+	} else {
+		xPosition = 30;
+	}
+	yPosition = 90;
+
+	setServoX(xPosition);
+	setServoY(yPosition);
+	delay(3000);
+
+	// Get current light value
+	int previousReading = getLightValue();
+	// Adjust x axis until hightest value is found
+	while (previousReading <= 825 && xPosition < 155) {
+		xPosition += xIncrement;
+		setServoX(xPosition);
+		delay(350);
+		// Check if the peak could have been close to halfway between previous and current
+		// If so, move back one half of the interval
+		if ((getLightValue() < previousReading + 10 && getLightValue() > previousReading - 10)
+		&& getLightValue() > 600) {
+			xPosition -= xIncrement/2;
+			setServoX(xPosition);
+			break;
+		// Peak was closer to the previous reading, move back to it
+		} else if (getLightValue() < previousReading && getLightValue() > 600) {
+			xPosition -= xIncrement;
+			setServoX(xPosition);
+			break;
+		}
+		previousReading = getLightValue();
+	}
+
+	// Get current light value
+	delay(350);
+	previousReading = getLightValue();
+	// Adjust y axis until highest value is found
+	while (previousReading < 830 && yPosition < 140) {
+		yPosition += yIncrement;
+		setServoY(yPosition);
+		delay(400);
+		if (getLightValue() < previousReading + 2 && getLightValue() > previousReading - 2) {
+			yPosition -= yIncrement/2;
+			setServoY(yPosition);
+			break;
+		} else if (getLightValue() < previousReading) {
+			yPosition -= yIncrement;
+			setServoY(yPosition);
+			break;
+		}
+		previousReading = getLightValue();
+	}
 }
