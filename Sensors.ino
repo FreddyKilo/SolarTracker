@@ -20,7 +20,7 @@ float getVoltage() {
 
 	// At 4.2v (max battery voltage) we get a reading of around 710
 	float voltage = 4.2 * sensorValue / 713;
-	
+
 	// Get the percentage of battery level
 	int percentage = (voltage - 3.2) * 100;
 
@@ -34,8 +34,10 @@ int getLightValue() {
 	// delay(100);
 	int sensorValue = analogRead(A0);
 
-	// In direct sunlight we get a reading of 800 and want our dashboard to have a max value of 100
-	// int light = 100 * sensorValue / 800;
+	// Keep track of hightest reading
+	if (sensorValue > maxLightValue) {
+		maxLightValue = sensorValue;
+	}
 
 	digitalWrite(D4, LOW);
 	return sensorValue;

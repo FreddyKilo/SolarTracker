@@ -16,6 +16,7 @@ void parseResponse() {
 
 	while (client.available()) {
 		String line = client.readStringUntil('\r');
+		// Print each line from the server response
 		// Serial.println(line);
 
 		// Get the time
@@ -30,6 +31,38 @@ void parseResponse() {
 			jsonContent = line.substring(line.indexOf("\"content\":{") + 11, line.indexOf("}"));
 		}
 	}
+}
+
+void setupReadableTime() {
+	// If we didn't get a time value from the response, reset and try again. Obtaining current time is critical
+	if (timeOfDay.equals("")) {
+		ESP.deepSleep(oneSecond);
+	}
+
+	// Let's use the 12 hour clock system with AM and PM :)
+	if (hour > 11) {
+		timeSuffix = "p";
+		if (hour > 12) {
+			twelveHour = hour % 12;
+		} else {
+			twelveHour = hour;
+		}
+	} else if (hour == 0) {
+		twelveHour = 12;
+	} else {
+		twelveHour = hour;
+	}
+
+	// If minutes are less than 10, we need to add a zero before the number i.e. 8 = 08
+	if (minutes < 10) {
+		strMinutes = "0" + String(minutes);
+	} else {
+		strMinutes = String(minutes);
+	}
+}
+
+String getReadableTime() {
+	return String(twelveHour) + ":" + strMinutes + timeSuffix;
 }
 
 /*
