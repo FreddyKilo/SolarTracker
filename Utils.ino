@@ -71,7 +71,7 @@ String getReadableTime() {
 	@returns - The value
 */
 String getJsonValue(String key) {
-	String value;
+	String value = "";
 
 	for (int i = 0; i < 6; i++) {
 		String subString = getSubstring(jsonContent, ',', i);

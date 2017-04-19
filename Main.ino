@@ -1,7 +1,7 @@
 void startTracking() {
 	/*
 		Get the values from the last dweet then use those values to help adjust the position
-		of the solar panels to obtain max voltage
+		of the solar panels to obtain max current
 	*/
 	getData();
 
@@ -11,41 +11,37 @@ void startTracking() {
 	// Set up the time variables to be able to format to a human readable time
 	setupReadableTime();
 
-	// If waking up from sunset, reset to neutral position.
-	// If no morning postion, do an initial scan
-	// Else just get the previous readings
-	if (getJsonValue("sunset").equals("true")) {
-		setNeutralPosition();
-	} else {
-		xPosition = getJsonValue("x").toInt();
-		yPosition = getJsonValue("y").toInt();
-	}
-
 	// If the hour is greater than 6pm (about sunset) and less than 7am (about sunrise), stop
 	// tracking and get the voltage reading periodically to monitor on freeboard
-	if (hour < 5 || hour > 22) {
+	if (hour < 7 || hour > 18) {
 		setNeutralPosition();
 		setData("time=" + getReadableTime() +
 				"&sunset=true" +
 				"&light=" +
 				"&voltage=" + String(getVoltage()));
 		Serial.println("Sleeping overnight...");
-		if (hour > 6 && hour < 7) {
+		if (hour == 6) {
 			// Wake up right at 7am
-			int hoursTilMorning = 60 / minutes;
-			ESP.deepSleep(hoursTilMorning * oneSecond)
-		} else {
-			// Sleep for an hour
-			ESP.deepSleep(overnightSleepTime * oneSecond);
+			if (minutes == 0) minutes = 60;
+			int hoursTilMorning = minutes / 60;
+			ESP.deepSleep(hoursTilMorning * oneSecond);
 		}
+		// Sleep for an hour
+		ESP.deepSleep(nightSleepTime * oneSecond);
 	}
 
-	initialScan();
+	// Get the previous servo positions and set new position. If they dont exist, start scan from home position
+	if (getJsonValue("x").equals("") || getJsonValue("y").equals("") || getJsonValue("sunset").equals("true")) {
+		setHomePosition();
+		setOptimalPostion();
+	} else {
+		xPosition = getJsonValue("x").toInt();
+		yPosition = getJsonValue("y").toInt();
+		setOptimalPostion();
+	}
 
 	if (maxLightValue < minLightValue) {
 		setNeutralPosition();
-		// Wait for servos to stop or else we will get a battery reading with a significant voltage drop
-		delay(2000);
 	}
 
 	/*
@@ -60,48 +56,5 @@ void startTracking() {
 
 	// Sleep until next scheduled adjustment
 	Serial.println("Taking a nap...");
-	ESP.deepSleep(sleepTime * oneSecond);
-}
-
-/*
-	This will be called if there were no previous recorded servo positions.
-*/
-void initialScan() {
-	
-	setHomePosition();
-
-	// Get current light value
-	int previousReading = getLightValue();
-	// Adjust x axis until hightest value is found
-	while (previousReading <= 825 && xPosition < 150) {
-		setServoX(xPosition + xIncrement);
-		// Check if the peak could have been close to halfway between previous and current
-		// If so, move back one half of the interval
-		if ((getLightValue() < previousReading + 10 && getLightValue() > previousReading - 10)
-		&& getLightValue() >= minLightValue) {
-			setServoX(xPosition - xIncrement / 2);
-			break;
-		// Peak was closer to the previous reading, move back to it
-		} else if (getLightValue() < previousReading && getLightValue() >= minLightValue) {
-			setServoX(xPosition - xIncrement);
-			break;
-		}
-		previousReading = getLightValue();
-	}
-
-	// Get current light value
-	previousReading = getLightValue();
-	// Adjust y axis until highest value is found
-	while (previousReading < 830 && yPosition < 140) {
-		setServoY(yPosition + yIncrement);
-		if ((getLightValue() < previousReading + 2 && getLightValue() > previousReading - 2)
-		&& getLightValue() >= minLightValue) {
-			setServoY(yPosition - yIncrement / 2);
-			break;
-		} else if (getLightValue() < previousReading) {
-			setServoY(yPosition - yIncrement);
-			break;
-		}
-		previousReading = getLightValue();
-	}
+	ESP.deepSleep(daySleepTime * oneSecond);
 }

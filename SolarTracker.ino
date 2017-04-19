@@ -20,8 +20,8 @@ int twelveHour;
 int minutes;
 String strMinutes;
 String timeSuffix = "a";
-int sleepTime = 1200; // 300 sec = 5 min
-int overnightSleepTime = 3600; // 3600 sec = 1 hour
+int daySleepTime = 1200; 		   // 600 sec = 10 min
+int nightSleepTime = 3600; // 3600 sec = 1 hour
 unsigned long oneSecond = 1000000L;
 
 // Servo controller communication
