@@ -1,8 +1,6 @@
 void startTracking() {
-	/*
-		Get the values from the last dweet then use those values to help adjust the position
-		of the solar panels to obtain max current
-	*/
+	
+	// Make a request to dweet.io for stored data
 	getData();
 
 	// Pick out all the valuable data we need from the server response
@@ -11,9 +9,13 @@ void startTracking() {
 	// Set up the time variables to be able to format to a human readable time
 	setupReadableTime();
 
-	// If the hour is greater than 6pm (about sunset) and less than 7am (about sunrise), stop
+// ====================================================
+// =================== NIGHT TIME =====================
+// ====================================================
+
+	// If the time is past 6pm (about sunset) and before 7am (about sunrise), stop
 	// tracking and get the voltage reading periodically to monitor on freeboard
-	if (hour < 7 || hour > 18) {
+	if (hour < 7 || hour > 17) {
 		setNeutralPosition();
 		setData("time=" + getReadableTime() +
 				"&sunset=true" +
@@ -21,23 +23,31 @@ void startTracking() {
 				"&voltage=" + String(getVoltage()));
 		Serial.println("Sleeping overnight...");
 		if (hour == 6) {
-			// Wake up right at 7am
-			if (minutes == 0) minutes = 60;
-			int hoursTilMorning = minutes / 60;
-			ESP.deepSleep(hoursTilMorning * oneSecond);
+			// For whatever reason, deepSleep wakes up a bit earlier than expected.
+			// This should gurantee waking a few minutes after morning wake time
+			int secondsTilMorning = (65 - minutes) * 60;
+			ESP.deepSleep(secondsTilMorning * oneSecond);
 		}
 		// Sleep for an hour
 		ESP.deepSleep(nightSleepTime * oneSecond);
 	}
 
-	// Get the previous servo positions and set new position. If they dont exist, start scan from home position
-	if (getJsonValue("x").equals("") || getJsonValue("y").equals("") || getJsonValue("sunset").equals("true")) {
+// ====================================================
+// =================== DAY TIME =======================
+// ====================================================
+
+	maxLightValue = getLightValue();
+	// If unable to get servo positions, or if waking up from night, or if debug mode, start scan from home position
+	if (getJsonValue("x").equals("") || getJsonValue("y").equals("") || getJsonValue("sunset").equals("true") || debug == true) {
 		setHomePosition();
 		setOptimalPostion();
-	} else {
+	} else { // Retrieve current positions from dweet
 		xPosition = getJsonValue("x").toInt();
 		yPosition = getJsonValue("y").toInt();
+		// If current light reading is less than previous, set optimal position
+		if (maxLightValue < getJsonValue("light").toInt()) {
 		setOptimalPostion();
+		}
 	}
 
 	if (maxLightValue < minLightValue) {

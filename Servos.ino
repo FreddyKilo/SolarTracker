@@ -46,60 +46,56 @@ void setNeutralPosition() {
 }
 
 void setHomePosition() {
- 	int delayTime;
  	// If it's past noon, we want to start at roughly 90 deg in the x axis
 	if (hour > 12) {
 		setServoX(90);
-		delayTime = 2000;
 	} else {
 		setServoX(30);
-		delayTime = 4000;
 	}
 	setServoY(90);
-	delay(delayTime);
+	delay(2000);
 }
 
 void setOptimalPostion() {
 	
-	// Get current light value
-	int previousReading = getLightValue();
-	// Adjust x axis until hightest value is found
-	while (previousReading <= 825 && xPosition < 150) {
+	int currentReading;
+	while (maxLightValue <= 825 && xPosition < 160) {
 		setServoX(xPosition + xIncrement);
 		// Check if the peak could have been close to halfway between previous and current
 		// If so, move back one half of the interval
-		if ((getLightValue() < previousReading + 10 && getLightValue() > previousReading - 10)
-		&& getLightValue() >= minLightValue) {
+		currentReading = getLightValue();
+		if ((currentReading < maxLightValue + 4 && currentReading > maxLightValue - 4)
+		&& currentReading >= minLightValue) {
 			setServoX(xPosition - xIncrement / 2);
 			break;
 		// Peak was closer to the previous reading, move back to it
-		} else if (getLightValue() < previousReading && getLightValue() >= minLightValue) {
+		} else if (currentReading < maxLightValue && currentReading >= minLightValue) {
 			setServoX(xPosition - xIncrement);
 			break;
 		}
-		previousReading = getLightValue();
 	}
 
-	// Get current light value
-	previousReading = getLightValue();
 	// Adjust y axis until highest value is found
-	// Start at an increment behind previous position
-	if (yPosition - yIncrement >= 90) {
-		yPosition -= yIncrement;
+	// Start at 2 increments behind previous position to account for southern directional variation
+	if (yPosition - (yIncrement * 2) >= 90) {
+		yPosition -= yIncrement * 2;
 	} else {
 		yPosition = 90;
 	}
 	setServoY(yPosition);
-	while (previousReading < 830 && yPosition < 140) {
+	
+	while (maxLightValue < 830 && yPosition < 130) {
 		setServoY(yPosition + yIncrement);
-		if ((getLightValue() < previousReading + 2 && getLightValue() > previousReading - 2)
-		&& getLightValue() >= minLightValue) {
+
+		currentReading = getLightValue();
+		if ((currentReading < maxLightValue + 2 && currentReading > maxLightValue - 2)
+		&& currentReading >= minLightValue) {
 			setServoY(yPosition - yIncrement / 2);
 			break;
-		} else if (getLightValue() < previousReading) {
+		} else if (currentReading < maxLightValue) {
 			setServoY(yPosition - yIncrement);
 			break;
 		}
-		previousReading = getLightValue();
+		maxLightValue = getLightValue();
 	}
 }

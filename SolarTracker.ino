@@ -11,7 +11,7 @@ int xIncrement = 10;
 int yIncrement = 10;
 
 int maxLightValue = 0;
-int minLightValue = 600;
+int minLightValue = 500;
 
 String jsonContent;
 String timeOfDay = "";
@@ -23,6 +23,8 @@ String timeSuffix = "a";
 int daySleepTime = 1200; 		   // 600 sec = 10 min
 int nightSleepTime = 3600; // 3600 sec = 1 hour
 unsigned long oneSecond = 1000000L;
+
+bool debug = true;
 
 // Servo controller communication
 SoftwareSerial maestroSerial(D6, D5);
@@ -57,7 +59,7 @@ void setup() {
 	digitalWrite(D4, LOW);
 
 	// Connect to WiFi network
-	//    WiFi.begin(ssid, pass);
+	WiFi.begin("FreddyKilo", "QWEASD456123");
 	startTracking();
 }
 
