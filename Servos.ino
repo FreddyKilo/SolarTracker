@@ -29,6 +29,7 @@ void setServoX(int degrees) {
 	xPosition = degrees;
 }
 
+// TODO: This needs to work asap
 bool servoIsMoving() {
 	if (maestro.getMovingState() == 1) {
 		Serial.println("Servo is moving");
@@ -45,57 +46,70 @@ void setNeutralPosition() {
 	delay(2000);
 }
 
-void setHomePosition() {
- 	// If it's past noon, we want to start at roughly 90 deg in the x axis
-	if (hour > 12) {
-		setServoX(90);
-	} else {
-		setServoX(30);
-	}
-	setServoY(90);
+/*
+	Set the position of the servos to where they should approximately be according to the time of day
+*/
+void setRelativePositionX(int offset) {
+	setServoX(relativeAngleX + offset);
 	delay(2000);
 }
 
 void setOptimalPostion() {
-	
-	int currentReading;
+	int firstReading;
+	int secondReading;
 	while (maxLightValue <= 825 && xPosition < 160) {
+		firstReading = getLightValue();
 		setServoX(xPosition + xIncrement);
-		// Check if the peak could have been close to halfway between previous and current
-		// If so, move back one half of the interval
-		currentReading = getLightValue();
-		if ((currentReading < maxLightValue + 4 && currentReading > maxLightValue - 4)
-		&& currentReading >= minLightValue) {
-			setServoX(xPosition - xIncrement / 2);
-			break;
-		// Peak was closer to the previous reading, move back to it
-		} else if (currentReading < maxLightValue && currentReading >= minLightValue) {
+		secondReading = getLightValue();
+
+		// x scan has finished, move to optimal position
+		if (secondReading < firstReading && firstReading >= minLightValue) {
 			setServoX(xPosition - xIncrement);
 			break;
+		} else if (xPosition > relativeAngleX + 20) {
+			setServoX(relativeAngleX);
+			break;
 		}
+
+		// // Check if the peak could have been close to halfway between previous and current
+		// // If so, move back one half of the interval
+		// if ((firstReading < maxLightValue + 4 && firstReading > maxLightValue - 4)
+		// && firstReading >= minLightValue) {
+		// 	setServoX(xPosition - xIncrement / 2);
+		// 	break;
+		// // Peak was closer to the previous reading, move back to it
+		// } else if (firstReading >= secondReading) {
+		// 	setServoX(xPosition - xIncrement);
+		// 	break;
+		// }
 	}
 
 	// Adjust y axis until highest value is found
 	// Start at 2 increments behind previous position to account for southern directional variation
-	if (yPosition - (yIncrement * 2) >= 90) {
-		yPosition -= yIncrement * 2;
+	if (yPosition - yIncrement >= 90) {
+		yPosition -= yIncrement;
 	} else {
 		yPosition = 90;
 	}
 	setServoY(yPosition);
 	
 	while (maxLightValue < 830 && yPosition < 130) {
+		firstReading = getLightValue();
 		setServoY(yPosition + yIncrement);
+		secondReading = getLightValue();
 
-		currentReading = getLightValue();
-		if ((currentReading < maxLightValue + 2 && currentReading > maxLightValue - 2)
-		&& currentReading >= minLightValue) {
-			setServoY(yPosition - yIncrement / 2);
-			break;
-		} else if (currentReading < maxLightValue) {
-			setServoY(yPosition - yIncrement);
+		if (secondReading < firstReading && firstReading >= minLightValue) {
+			setServoX(yPosition - yIncrement);
 			break;
 		}
-		maxLightValue = getLightValue();
+
+		// if ((currentReading < maxLightValue + 2 && currentReading > maxLightValue - 2)
+		// && currentReading >= minLightValue) {
+		// 	setServoY(yPosition - yIncrement / 2);
+		// 	break;
+		// } else if (currentReading < maxLightValue) {
+		// 	setServoY(yPosition - yIncrement);
+		// 	break;
+		// }
 	}
 }

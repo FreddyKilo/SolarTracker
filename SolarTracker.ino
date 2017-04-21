@@ -6,6 +6,7 @@
 WiFiClient client;
 
 int xPosition;
+int relativeAngleX;
 int yPosition;
 int xIncrement = 10;
 int yIncrement = 10;
@@ -20,7 +21,7 @@ int twelveHour;
 int minutes;
 String strMinutes;
 String timeSuffix = "a";
-int daySleepTime = 1200; 		   // 600 sec = 10 min
+int daySleepTime = 1200;   // 600 sec = 10 min
 int nightSleepTime = 3600; // 3600 sec = 1 hour
 unsigned long oneSecond = 1000000L;
 
@@ -59,7 +60,7 @@ void setup() {
 	digitalWrite(D4, LOW);
 
 	// Connect to WiFi network
-	WiFi.begin("FreddyKilo", "QWEASD456123");
+	// WiFi.begin("ssid", "password");
 	startTracking();
 }
 

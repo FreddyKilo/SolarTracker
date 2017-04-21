@@ -36,18 +36,18 @@ void startTracking() {
 // =================== DAY TIME =======================
 // ====================================================
 
-	maxLightValue = getLightValue();
+	relativeAngleX = (hour - 6) * 15;
 	// If unable to get servo positions, or if waking up from night, or if debug mode, start scan from home position
 	if (getJsonValue("x").equals("") || getJsonValue("y").equals("") || getJsonValue("sunset").equals("true") || debug == true) {
-		setHomePosition();
+		setRelativePositionX(-20);
 		setOptimalPostion();
-	} else { // Retrieve current positions from dweet
+
+	// If current light reading is less than previous, set optimal position
+	} else if (getLightValue() < getJsonValue("light").toInt()) {
+		// Retrieve current positions from dweet
 		xPosition = getJsonValue("x").toInt();
 		yPosition = getJsonValue("y").toInt();
-		// If current light reading is less than previous, set optimal position
-		if (maxLightValue < getJsonValue("light").toInt()) {
 		setOptimalPostion();
-		}
 	}
 
 	if (maxLightValue < minLightValue) {
