@@ -1,41 +1,47 @@
 
 /*
-	Channel 4
-	Min: 1408 (90 deg)
-	Max: 2000 (150 deg)
-*/
-void setServoY(int degrees) {
-	int channel = 4;
-	int target = ((degrees - 90) * 10) + 1408;
-	int quarterMicroSec = target * 4;
-	Serial.println("Moving servo y to " + String(degrees));
-	maestro.setTarget(channel, quarterMicroSec);
-	delay(yIncrement * 40);
-	yPosition = degrees;
-}
-
-/*
 	Channel 5
 	Min: 1168 (20 deg)
 	Max: 1744 (160 deg)
 */
 void setServoX(int degrees) {
-	int channel = 5;
-	int target = ((degrees - 20) * 4) + 1168;
+	int target = getTarget(20, 160, 1168, 1744, degrees);
 	int quarterMicroSec = target * 4;
+
 	Serial.println("Moving servo x to " + String(degrees));
-	maestro.setTarget(channel, quarterMicroSec);
+	maestro.setTarget(5, quarterMicroSec);
+
 	delay(xIncrement * 35);
 	xPosition = degrees;
 }
 
-// TODO: This needs to work asap
+/*
+	Channel 4
+	Min: 1408 (90 deg)
+	Max: 2000 (150 deg)
+*/
+void setServoY(int degrees) {
+	int target = getTarget(90, 150, 1408, 2000, degrees);
+	int quarterMicroSec = target * 4;
+
+	Serial.println("Moving servo y to " + String(degrees));
+	maestro.setTarget(4, quarterMicroSec);
+
+	delay(yIncrement * 40);
+	yPosition = degrees;
+}
+
+/*
+	Get the servo target using degrees as input
+*/
+int getTarget(int x1, int x2, int y1, int y2, int input) {
+	int slope = (y2 - y1) / (x2 - x1);
+	int yIntercept = y1 - slope * x1;
+	return slope * input + yIntercept;
+}
+
 bool servoIsMoving() {
-	if (maestro.getMovingState() == 1) {
-		Serial.println("Servo is moving");
-		delay(100);
-		return true;
-	}
+	// TODO: Make this work asap	
 	return false;
 }
 
@@ -43,57 +49,64 @@ void setNeutralPosition() {
 	setServoX(90);
 	setServoY(90);
 	// Wait for servos to stop or else we could get a battery reading with a significant voltage drop
-	delay(2000);
+	delay(4000);
+}
+
+/*
+	Get the x position relative to the current time
+	@returns - angle in degrees
+*/
+int getRelativePositionX() {
+	return (hour - 6) * 15;
 }
 
 /*
 	Set the position of the servos to where they should approximately be according to the time of day
+	@param offset - the amount of offset in degrees
 */
 void setRelativePositionX(int offset) {
-	setServoX(relativeAngleX + offset);
-	delay(2000);
+	int degrees = getRelativePositionX() + offset;
+	if (degrees <= xMax) {
+		setServoX(degrees);
+	} else {
+		setServoX(xMax);
+	}
+	delay(3000);
 }
 
 void setOptimalPostion() {
 	int firstReading;
 	int secondReading;
-	while (maxLightValue <= 825 && xPosition < 160) {
+
+	// Adjust x axis until highest value is found
+	while (maxLightValue <= 825 && xPosition < xMax) {
 		firstReading = getLightValue();
 		setServoX(xPosition + xIncrement);
 		secondReading = getLightValue();
 
-		// x scan has finished, move to optimal position
+		// If readings start to decrease, move back to last greatest reading
 		if (secondReading < firstReading && firstReading >= minLightValue) {
 			setServoX(xPosition - xIncrement);
 			break;
-		} else if (xPosition > relativeAngleX + 20) {
-			setServoX(relativeAngleX);
+
+		// If the current x position ends up greater than the relative positive threshold
+		// aka if we pass where the sun should have been, go back to where we think it is
+		} else if (xPosition > getRelativePositionX() + relativeThreshold) {
+			setRelativePositionX(0);
 			break;
 		}
-
-		// // Check if the peak could have been close to halfway between previous and current
-		// // If so, move back one half of the interval
-		// if ((firstReading < maxLightValue + 4 && firstReading > maxLightValue - 4)
-		// && firstReading >= minLightValue) {
-		// 	setServoX(xPosition - xIncrement / 2);
-		// 	break;
-		// // Peak was closer to the previous reading, move back to it
-		// } else if (firstReading >= secondReading) {
-		// 	setServoX(xPosition - xIncrement);
-		// 	break;
-		// }
 	}
 
-	// Adjust y axis until highest value is found
 	// Start at 2 increments behind previous position to account for southern directional variation
-	if (yPosition - yIncrement >= 90) {
-		yPosition -= yIncrement;
+	if (yPosition - yIncrement * 2 >= yMin) {
+		yPosition -= yIncrement * 2;
 	} else {
-		yPosition = 90;
+		yPosition = yMin;
 	}
 	setServoY(yPosition);
 	
-	while (maxLightValue < 830 && yPosition < 130) {
+	// Adjust y axis until highest value is found
+	while (maxLightValue < 830 && yPosition < yMax) {
 		firstReading = getLightValue();
 		setServoY(yPosition + yIncrement);
 		secondReading = getLightValue();
@@ -102,14 +115,5 @@ void setOptimalPostion() {
 			setServoX(yPosition - yIncrement);
 			break;
 		}
-
-		// if ((currentReading < maxLightValue + 2 && currentReading > maxLightValue - 2)
-		// && currentReading >= minLightValue) {
-		// 	setServoY(yPosition - yIncrement / 2);
-		// 	break;
-		// } else if (currentReading < maxLightValue) {
-		// 	setServoY(yPosition - yIncrement);
-		// 	break;
-		// }
 	}
 }

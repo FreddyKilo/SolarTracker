@@ -2,10 +2,8 @@ void startTracking() {
 	
 	// Make a request to dweet.io for stored data
 	getData();
-
 	// Pick out all the valuable data we need from the server response
 	parseResponse();
-
 	// Set up the time variables to be able to format to a human readable time
 	setupReadableTime();
 
@@ -15,7 +13,7 @@ void startTracking() {
 
 	// If the time is past 6pm (about sunset) and before 7am (about sunrise), stop
 	// tracking and get the voltage reading periodically to monitor on freeboard
-	if (hour < 7 || hour > 17) {
+	if (hour < 7 || hour > 18) {
 		setNeutralPosition();
 		setData("time=" + getReadableTime() +
 				"&sunset=true" +
@@ -36,27 +34,20 @@ void startTracking() {
 // =================== DAY TIME =======================
 // ====================================================
 
-	relativeAngleX = (hour - 6) * 15;
-	// If unable to get servo positions, or if waking up from night, or if debug mode, start scan from home position
+	// If unable to get servo positions, or if waking up from night, or if debug mode, start scan from relative home position
 	if (getJsonValue("x").equals("") || getJsonValue("y").equals("") || getJsonValue("sunset").equals("true") || debug == true) {
-		setRelativePositionX(-20);
+		setRelativePositionX(-relativeThreshold);
 		setOptimalPostion();
 
 	// If current light reading is less than previous, set optimal position
 	} else if (getLightValue() < getJsonValue("light").toInt()) {
-		// Retrieve current positions from dweet
+		// Get current positions from dweet
 		xPosition = getJsonValue("x").toInt();
 		yPosition = getJsonValue("y").toInt();
 		setOptimalPostion();
 	}
 
-	if (maxLightValue < minLightValue) {
-		setNeutralPosition();
-	}
-
-	/*
-		Store current values for next position adjustment.
-	*/
+	// Store current values for next position adjustment.
 	setData("x=" + String(xPosition) +
 			"&y=" + String(yPosition) +
 			"&light=" + String(getLightValue()) +

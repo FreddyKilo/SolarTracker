@@ -61,6 +61,9 @@ void setupReadableTime() {
 	}
 }
 
+/*
+	Get a human readable 12-hour time format
+*/
 String getReadableTime() {
 	return String(twelveHour) + ":" + strMinutes + timeSuffix;
 }

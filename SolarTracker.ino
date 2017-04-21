@@ -6,13 +6,19 @@
 WiFiClient client;
 
 int xPosition;
-int relativeAngleX;
 int yPosition;
+
+int xMin = 20;
+int xMax = 160;
+int yMin = 90;
+int yMax = 130;
+
 int xIncrement = 10;
 int yIncrement = 10;
+int relativeThreshold = 20;
 
 int maxLightValue = 0;
-int minLightValue = 500;
+int minLightValue = 400;
 
 String jsonContent;
 String timeOfDay = "";
