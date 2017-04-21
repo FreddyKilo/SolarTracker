@@ -1,4 +1,9 @@
 
+/*
+	TODO list:
+	- Edge case, cant connect to wifi? Dont loop!
+*/
+
 #include <PololuMaestro.h>
 #include <ESP8266WiFi.h>
 #include <SoftwareSerial.h>
@@ -66,7 +71,8 @@ void setup() {
 	digitalWrite(D4, LOW);
 
 	// Connect to WiFi network
-	// WiFi.begin("ssid", "password");
+	int credCode = 0;
+	WiFi.begin(getSsid(credCode), getPassword(credCode));
 	startTracking();
 }
 
