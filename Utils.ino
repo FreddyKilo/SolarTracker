@@ -17,11 +17,12 @@ void parseResponse() {
 	while (client.available()) {
 		String line = client.readStringUntil('\r');
 		// Print each line from the server response
-		// Serial.println(line);
+		Serial.println(line);
 
-		// Get the time
+		// Get the time and convert the hour to Arizona time
 		if (line.indexOf("Date:") > -1) {
 			timeOfDay = getSubstring(line, ' ', 5);
+			day = getSubstring(line, '{', 1).toInt();
 			hour = (getSubstring(timeOfDay, ':', 0).toInt() + 17) % 24;
 			minutes = (getSubstring(timeOfDay, ':', 1).toInt());
 		}
@@ -29,14 +30,17 @@ void parseResponse() {
 		// Get the content from response Json
 		if (line.indexOf('{') > -1) {
 			jsonContent = line.substring(line.indexOf("\"content\":{") + 11, line.indexOf("}"));
+			date = line.substring(line.indexOf("\"created\":") + 10, line.indexOf(",\"content\""));
+			month = getSubstring(date, '-', 1).toInt();
+			day = date.substring(9, date.indexOf("T")).toInt();
 		}
 	}
 }
 
 void setupReadableTime() {
-	// If we didn't get a time value from the response, reset and try again. Obtaining current time is critical
+	// If we didn't get a time value from the response, reset and try again in 5 minuites. Obtaining current time is critical
 	if (timeOfDay.equals("")) {
-		ESP.deepSleep(oneSecond);
+		ESP.deepSleep(oneSecond * 300);
 	}
 
 	// Let's use the 12 hour clock system with AM and PM :)

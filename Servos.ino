@@ -5,13 +5,13 @@
 	Max: 1744 (160 deg)
 */
 void setServoX(int degrees) {
-	int target = getTarget(20, 160, 1168, 1744, degrees);
+	int target = getLinearOutput(20, 160, 1168, 1744, degrees);
 	int quarterMicroSec = target * 4;
 
 	Serial.println("Moving servo x to " + String(degrees));
 	maestro.setTarget(5, quarterMicroSec);
 
-	delay(xIncrement * 35);
+	delay(abs(xPosition - degrees) * 35);
 	xPosition = degrees;
 }
 
@@ -21,20 +21,20 @@ void setServoX(int degrees) {
 	Max: 2000 (150 deg)
 */
 void setServoY(int degrees) {
-	int target = getTarget(90, 150, 1408, 2000, degrees);
+	int target = getLinearOutput(90, 150, 1408, 2000, degrees);
 	int quarterMicroSec = target * 4;
 
 	Serial.println("Moving servo y to " + String(degrees));
 	maestro.setTarget(4, quarterMicroSec);
 
-	delay(yIncrement * 40);
+	delay(abs(yPosition - degrees) * 40);
 	yPosition = degrees;
 }
 
 /*
 	Get the servo target using degrees as input
 */
-int getTarget(int x1, int x2, int y1, int y2, int input) {
+int getLinearOutput(int x1, int x2, int y1, int y2, int input) {
 	int slope = (y2 - y1) / (x2 - x1);
 	int yIntercept = y1 - slope * x1;
 	return slope * input + yIntercept;
@@ -49,29 +49,52 @@ void setNeutralPosition() {
 	setServoX(90);
 	setServoY(90);
 	// Wait for servos to stop or else we could get a battery reading with a significant voltage drop
-	delay(4000);
+	delay(2000);
 }
 
 /*
 	Get the x position relative to the current time
+	The Earth spins 1 degree every 4 minutes
 	@returns - angle in degrees
 */
 int getRelativePositionX() {
-	return (hour - 6) * 15;
+	return ((hour - 6) * 60 + minutes) / 4;
 }
 
 /*
-	Set the position of the servos to where they should approximately be according to the time of day
+	Get the y position relative to Phoenix, AZ
+	Using quadratic vertex form
+*/
+int getRelativePositionY() {
+	int latitudeInPhoenix = 33.4;
+	int earthTilt = 23.5;
+	return -.93 * pow(hour - 12, 2) + 90 + latitudeInPhoenix;
+}
+
+/*
+	Set the position of the servo to where it should approximately be according to the time of day
 	@param offset - the amount of offset in degrees
 */
 void setRelativePositionX(int offset) {
 	int degrees = getRelativePositionX() + offset;
-	if (degrees <= xMax) {
-		setServoX(degrees);
-	} else {
+	if (degrees > xMax) {
 		setServoX(xMax);
+	} else if (degrees < xMin) {
+		setServoX(xMin);
+	} else {
+		setServoX(degrees);
 	}
-	delay(3000);
+}
+
+void setRelativePositionY(int offset) {
+	int degrees = getRelativePositionY() + offset;
+	if (degrees > yMax) {
+		setServoX(yMax);
+	} else if (degrees < xMin) {
+		setServoX(xMin);
+	} else {
+		setServoX(degrees);
+	}
 }
 
 void setOptimalPostion() {
@@ -99,11 +122,10 @@ void setOptimalPostion() {
 
 	// Start at 2 increments behind previous position to account for southern directional variation
 	if (yPosition - yIncrement * 2 >= yMin) {
-		yPosition -= yIncrement * 2;
+		setServoY(yPosition - yIncrement * 2);
 	} else {
-		yPosition = yMin;
+		setServoY(yMin);
 	}
-	setServoY(yPosition);
 	
 	// Adjust y axis until highest value is found
 	while (maxLightValue < 830 && yPosition < yMax) {
@@ -112,7 +134,7 @@ void setOptimalPostion() {
 		secondReading = getLightValue();
 
 		if (secondReading < firstReading && firstReading >= minLightValue) {
-			setServoX(yPosition - yIncrement);
+			setServoY(yPosition - yIncrement);
 			break;
 		}
 	}
