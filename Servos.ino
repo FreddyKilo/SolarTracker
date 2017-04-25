@@ -66,9 +66,13 @@ int getRelativePositionX() {
 	Using quadratic vertex form
 */
 int getRelativePositionY() {
-	int latitudeInPhoenix = 33.4;
+	int latitude = 33.4;
 	int earthTilt = 23.5;
-	return -.93 * pow(hour - 12, 2) + 90 + latitudeInPhoenix;
+	return sin(getRadians(hour * 15 - 90)) * latitude + 90;
+}
+
+int getRadians(int angle) {
+	return angle * (3.1416 / 180);
 }
 
 /*
