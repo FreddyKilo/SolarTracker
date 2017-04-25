@@ -89,11 +89,11 @@ void setRelativePositionX(int offset) {
 void setRelativePositionY(int offset) {
 	int degrees = getRelativePositionY() + offset;
 	if (degrees > yMax) {
-		setServoX(yMax);
+		setServoY(yMax);
 	} else if (degrees < xMin) {
-		setServoX(xMin);
+		setServoY(xMin);
 	} else {
-		setServoX(degrees);
+		setServoY(degrees);
 	}
 }
 
