@@ -1,7 +1,5 @@
 
 /*
-	TODO list:
-	- Edge case, cant connect to wifi? Dont loop!
 */
 
 #include <PololuMaestro.h>
