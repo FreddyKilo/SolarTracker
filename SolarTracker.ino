@@ -1,7 +1,4 @@
 
-/*
-*/
-
 #include <PololuMaestro.h>
 #include <ESP8266WiFi.h>
 #include <SoftwareSerial.h>
@@ -39,19 +36,12 @@ int daySleepTime = 1200;   // 600 sec = 10 min
 int nightSleepTime = 3600; // 3600 sec = 1 hour
 unsigned long oneSecond = 1000000L;
 
-bool debug = false;
+bool debugMode = false;
+bool connected;
 
 // Servo controller communication
 SoftwareSerial maestroSerial(D6, D5);
 MicroMaestro maestro(maestroSerial);
-
-/*
-	Setup for test
-*/
-void setupx() {
-	Serial.begin(115200);
-	maestroSerial.begin(9600);
-}
 
 /*
 	Setup for application
@@ -75,24 +65,24 @@ void setup() {
 
 	// Connect to WiFi network
 	int credCode = 1;
-	// WiFi.begin(getSsid(credCode), getPassword(credCode));
+	WiFi.begin(getSsid(credCode), getPassword(credCode));
+}
+
+void loop() {
 	startTracking();
+	// runTests();
 }
 
 /*
-	This is used only for running tests
+	Test method
 */
-void loop() {
+void runTests() {
 	// Make a request to dweet.io for stored data
-	getData();
-	// Pick out all the valuable data we need from the server response
-	parseResponse();
-	// Set up the time variables to be able to format to a human readable time
-	setupReadableTime();
+	// getData();
 	int xPos = getRelativePositionX();
 	int yPos = getRelativePositionY();
-	Serial.println("Month: " + String(month));
-	Serial.println("Day: " + String(day));
+	Serial.println("ssid: " + String(getSsid(0)));
+	Serial.println("pass: " + String(getPassword(0)));
 	Serial.println("Relative X Position: " + String(xPos));
 	Serial.println("Relative Y Position: " + String(yPos));
 	delay(50000);

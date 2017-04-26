@@ -36,35 +36,27 @@ void startTracking() {
 // =================== DAY TIME =======================
 // ====================================================
 
-	// Get current positions from dweet
-	xPosition = getJsonValue("x").toInt();
-	yPosition = getJsonValue("y").toInt();
-
-	// If unable to get servo positions, or if waking up from night, or if debug mode, start scan from relative home position
-	if (getJsonValue("x").equals("") || getJsonValue("y").equals("") || getJsonValue("sunset").equals("true") || debug == true) {
-		setRelativePositionX(-relativeThreshold);
-		setRelativePositionY(-relativeThreshold);
+	// If unable to connect to server, or if debug mode, set optimal position algorithmically
+	if (!connected || debugMode) {
 		setOptimalPostion();
 
-	// // If current light reading is less than previous, set optimal position
-	// } else if (getLightValue() < getJsonValue("light").toInt()) {
-	// 	setOptimalPostion();
-
-	// Set the current position based on the time of day
+	// Set the current position based on latitude, time of day, and day of year
 	} else {
 		setRelativePositionX(0);
 		setRelativePositionY(0);
+
+		// Store current values for freeboard.
+		setData("x=" + String(xPosition) +
+				"&y=" + String(yPosition) +
+				"&light=" + String(getLightValue()) +
+				"&voltage=" + String(getVoltage()) +
+				"&time=" + getReadableTime() +
+				"&sunset=false");
+
+		// Sleep until next scheduled adjustment
+		Serial.println("Taking a nap...");
+		ESP.deepSleep(daySleepTime * oneSecond);
 	}
-
-	// Store current values for next position adjustment.
-	setData("x=" + String(xPosition) +
-			"&y=" + String(yPosition) +
-			"&light=" + String(getLightValue()) +
-			"&voltage=" + String(getVoltage()) +
-			"&time=" + getReadableTime() +
-			"&sunset=false");
-
-	// Sleep until next scheduled adjustment
-	Serial.println("Taking a nap...");
-	ESP.deepSleep(daySleepTime * oneSecond);
+	
+	delay(daySleepTime * 1000L);
 }

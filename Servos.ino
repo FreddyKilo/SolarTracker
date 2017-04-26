@@ -71,7 +71,7 @@ int getRelativePositionY() {
 	return sin(getRadians(hour * 15 - 90)) * latitude + 90;
 }
 
-int getRadians(int angle) {
+float getRadians(int angle) {
 	return angle * (3.1416 / 180);
 }
 
