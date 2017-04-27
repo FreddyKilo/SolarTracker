@@ -71,10 +71,6 @@ int getRelativePositionY() {
 	return sin(getRadians(hour * 15 - 90)) * latitude + 90;
 }
 
-float getRadians(int angle) {
-	return angle * (3.1416 / 180);
-}
-
 /*
 	Set the position of the servo to where it should approximately be according to the time of day
 	@param offset - the amount of offset in degrees

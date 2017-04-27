@@ -2,6 +2,8 @@
 #include <PololuMaestro.h>
 #include <ESP8266WiFi.h>
 #include <SoftwareSerial.h>
+#include <math.h>
+
 
 WiFiClient client;
 
@@ -69,8 +71,8 @@ void setup() {
 }
 
 void loop() {
-	startTracking();
-	// runTests();
+	// startTracking();
+	runTests();
 }
 
 /*
@@ -81,9 +83,9 @@ void runTests() {
 	// getData();
 	int xPos = getRelativePositionX();
 	int yPos = getRelativePositionY();
-	Serial.println("ssid: " + String(getSsid(0)));
-	Serial.println("pass: " + String(getPassword(0)));
+	float lenDay = getLengthOfDay(45, 23.4);
 	Serial.println("Relative X Position: " + String(xPos));
 	Serial.println("Relative Y Position: " + String(yPos));
+	Serial.println("Length of day: " + String(lenDay));
 	delay(50000);
 }

@@ -113,3 +113,16 @@ String getSubstring(String line, char separator, int index) {
 	}
 	return (found > index ? line.substring(strIndex[0], strIndex[1]) : "");
 }
+
+float getLengthOfDay(float latitude, float earthTilt) {
+	return 12 + 
+			asin(
+			(sin(getRadians(latitude)) * sin(getRadians(earthTilt))) /
+			(sin(getRadians(90 - earthTilt)) * cos(getRadians(latitude)))) / 
+			getRadians(90) * 
+			12;
+}
+
+float getRadians(float angle) {
+	return angle * (3.1416 / 180);
+}
