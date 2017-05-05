@@ -10,6 +10,9 @@ WiFiClient client;
 int xPosition;
 int yPosition;
 
+float azimuth;
+float elev;
+
 int xMin = 20;
 int xMax = 160;
 int yMin = 90;
@@ -23,9 +26,11 @@ int maxLightValue = 0;
 int minLightValue = 400;
 
 String date;
+int year;
 int month;
 int day;
 int hour;
+int gmtHour;
 int twelveHour;
 int minutes;
 
@@ -67,7 +72,7 @@ void setup() {
 
 	// Connect to WiFi network
 	int credCode = 1;
-	WiFi.begin(getSsid(credCode), getPassword(credCode));
+	// WiFi.begin(getSsid(credCode), getPassword(credCode));
 }
 
 void loop() {
@@ -80,12 +85,9 @@ void loop() {
 */
 void runTests() {
 	// Make a request to dweet.io for stored data
-	// getData();
-	int xPos = getRelativePositionX();
-	int yPos = getRelativePositionY();
-	float lenDay = getLengthOfDay(45, 23.4);
-	Serial.println("Relative X Position: " + String(xPos));
-	Serial.println("Relative Y Position: " + String(yPos));
-	Serial.println("Length of day: " + String(lenDay));
-	delay(50000);
+	getData();
+	parseResponse();
+	calculateSolarPosition(year, month, day, gmtHour, minutes);
+
+	delay(60000);
 }
