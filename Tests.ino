@@ -18,12 +18,16 @@ void testJson() {
 }
 
 void testServos() {
-  setServoY(100);
-  delay(1000);
-  setServoX(80);
-  delay(1000);
-  setServoY(120);
-  delay(1000);
-  setServoX(100);
-  delay(1000);
+  setNeutralPosition();
+  setAzimuth(120);
+  setElevation(50);
+  setAzimuth(160);
+  setElevation(70);
+  setAzimuth(200);
+}
+
+void testCalculations() {
+  int t = map(90, 90, 270, 1894, 1124);
+  Serial.println("target: " + String(t));
+  delay(10000);
 }

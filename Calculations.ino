@@ -1,23 +1,23 @@
-/* 
-	This program calculates solar positions as a function of location, date, and time.
-	The equations are from Jean Meeus, Astronomical Algorithms, Willmann-Bell, Inc., Richmond, VA
-	(C) 2015, David Brooks, Institute for Earth Science Research and Education.
-*/
 
 #define DEG_TO_RAD 0.01745329
 #define PI 3.141592654
 #define TWOPI 6.28318531
 
-int second = 0;
 float Lon = -112.0740 * DEG_TO_RAD;
 float Lat = 33.4484 * DEG_TO_RAD;
 float T, JD_frac, L0, M, e, C, L_true, f, R, GrHrAngle, Obl, RA, Decl, HrAngle;
 long JD_whole, JDx;
+float azimuth;
+float elev;
 
-void calculateSolarPosition(int year, int month, int day, int hour, int minutes) {
-
+/* 
+	This method calculates solar positions as a function of location, date, and time.
+	The equations are from Jean Meeus, Astronomical Algorithms, Willmann-Bell, Inc., Richmond, VA
+	(C) 2015, David Brooks, Institute for Earth Science Research and Education.
+*/
+void calculateSolarPosition() {
 	JD_whole = JulianDate(year, month, day);
-	JD_frac = (hour + minutes / 60.0 + second / 3600.0) / 24.0 - 0.5;
+	JD_frac = (gmtHour + minutes / 60.0 / 3600.0) / 24.0 - 0.5;
 	T = JD_whole - 2451545; T = (T + JD_frac) / 36525.;
 	L0 = DEG_TO_RAD * floatmod(280.46645 + 36000.76983 * T, 360.0);
 	M = DEG_TO_RAD * floatmod(357.5291 + 35999.0503 * T, 360.0);
@@ -33,10 +33,8 @@ void calculateSolarPosition(int year, int month, int day, int hour, int minutes)
 	RA = atan2(sin(L_true) * cos(Obl), cos(L_true));
 	Decl = asin(sin(Obl) * sin(L_true));
 	HrAngle = DEG_TO_RAD * GrHrAngle + Lon - RA;
-
 	azimuth = PI + atan2(sin(HrAngle), cos(HrAngle) * sin(Lat) - tan(Decl) * cos(Lat));
 	elev = asin(sin(Lat) * sin(Decl) + cos(Lat) * (cos(Decl) * cos(HrAngle)));
-	printCalculations();
 }
 
 float getAzimuth() {
@@ -47,6 +45,10 @@ float getElevation() {
 	return getAngleByRadians(elev);
 }
 
+/*
+	If using an esp8266, use this in lue of fmod() due to
+	a bug in libm.a that causes a compile error
+*/
 double floatmod(double a, double b) {
     return (a - b * floor(a / b));
 }
@@ -62,13 +64,39 @@ long JulianDate(int year, int month, int day) {
 	return JD_whole;
 }
 
+float getLengthOfDay(float latitude, float earthTilt) {
+	return 12 + asin(
+			(sin(getRadians(latitude)) * sin(getRadians(earthTilt))) /
+			(sin(getRadians(90 - earthTilt)) * cos(getRadians(latitude)))) / 
+			getRadians(90) * 12;
+}
+
+float getRadians(float angle) {
+	return angle * (PI / 180);
+}
+
+float getAngleByRadians(float radians) {
+	return radians * (180 / PI);
+}
+
+/*
+	Pass in a slope along with an input. Arduino map() will return
+	an identical value, but what's the fun in that?
+*/
+int getLinearOutput(int x1, int x2, int y1, int y2, float input) {
+	float slope = (y2 - y1) / (x2 - x1);
+	float yIntercept = y1 - slope * x1;
+	return slope * input + yIntercept;
+}
+
+
 void printCalculations() {
 	Serial.println("");
 	Serial.println("Year: " + String(year));
 	Serial.println("Month: " + String(month));
 	Serial.println("Day: " + String(day));
 	Serial.println("Time: " + String(hour) + ":" + String(minutes));
-	Serial.println("Elevation: " + String(elev / DEG_TO_RAD, 3));
-	Serial.println("Azimuth: " + String(azimuth / DEG_TO_RAD, 3));
+	Serial.println("Elevation: " + String(getAngleByRadians(elev)));
+	Serial.println("Azimuth: " + String(getAngleByRadians(azimuth)));
 	Serial.println("");
 }

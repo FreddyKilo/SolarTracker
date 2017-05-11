@@ -1,11 +1,11 @@
 
 /*
 	Channel 5
-	Min: 1168 (20 deg)
-	Max: 1744 (160 deg)
+	90 deg = 1894
+	270 deg = 1124
 */
-void setServoX(int degrees) {
-	int target = getLinearOutput(20, 160, 1168, 1744, degrees);
+void setAzimuth(float degrees) {
+	int target = map(degrees, 90, 270, 1894, 1124);
 	int quarterMicroSec = target * 4;
 
 	Serial.println("Moving servo x to " + String(degrees));
@@ -16,28 +16,19 @@ void setServoX(int degrees) {
 }
 
 /*
-	Channel 4
-	Min: 1408 (90 deg)
-	Max: 2000 (150 deg)
+	Channel 2
+	90 deg = 1472
+	0 deg = 2366
 */
-void setServoY(int degrees) {
-	int target = getLinearOutput(90, 150, 1408, 2000, degrees);
+void setElevation(float degrees) {
+	int target = map(degrees, 0, 90, 2366, 1408);
 	int quarterMicroSec = target * 4;
 
 	Serial.println("Moving servo y to " + String(degrees));
-	maestro.setTarget(4, quarterMicroSec);
+	maestro.setTarget(3, quarterMicroSec);
 
 	delay(abs(yPosition - degrees) * 40);
 	yPosition = degrees;
-}
-
-/*
-	Get the servo target using degrees as input
-*/
-int getLinearOutput(int x1, int x2, int y1, int y2, int input) {
-	int slope = (y2 - y1) / (x2 - x1);
-	int yIntercept = y1 - slope * x1;
-	return slope * input + yIntercept;
 }
 
 bool servoIsMoving() {
@@ -46,8 +37,8 @@ bool servoIsMoving() {
 }
 
 void setNeutralPosition() {
-	setServoX(90);
-	setServoY(90);
+	setAzimuth(180);
+	setElevation(90);
 	// Wait for servos to stop or else we could get a battery reading with a significant voltage drop
 	delay(2000);
 }
@@ -78,22 +69,22 @@ int getRelativePositionY() {
 void setRelativePositionX(int offset) {
 	int degrees = getRelativePositionX() + offset;
 	if (degrees > xMax) {
-		setServoX(xMax);
+		setAzimuth(xMax);
 	} else if (degrees < xMin) {
-		setServoX(xMin);
+		setAzimuth(xMin);
 	} else {
-		setServoX(degrees);
+		setAzimuth(degrees);
 	}
 }
 
 void setRelativePositionY(int offset) {
 	int degrees = getRelativePositionY() + offset;
 	if (degrees > yMax) {
-		setServoY(yMax);
+		setElevation(yMax);
 	} else if (degrees < xMin) {
-		setServoY(xMin);
+		setElevation(xMin);
 	} else {
-		setServoY(degrees);
+		setElevation(degrees);
 	}
 }
 
@@ -104,12 +95,12 @@ void setOptimalPostion() {
 	// Adjust x axis until highest value is found
 	while (maxLightValue <= 825 && xPosition < xMax) {
 		firstReading = getLightValue();
-		setServoX(xPosition + xIncrement);
+		setAzimuth(xPosition + xIncrement);
 		secondReading = getLightValue();
 
 		// If readings start to decrease, move back to last greatest reading
 		if (secondReading < firstReading && firstReading >= minLightValue) {
-			setServoX(xPosition - xIncrement);
+			setAzimuth(xPosition - xIncrement);
 			break;
 
 		// If the current x position ends up greater than the relative positive threshold
@@ -122,19 +113,19 @@ void setOptimalPostion() {
 
 	// Start at 2 increments behind previous position to account for southern directional variation
 	if (yPosition - yIncrement * 2 >= yMin) {
-		setServoY(yPosition - yIncrement * 2);
+		setElevation(yPosition - yIncrement * 2);
 	} else {
-		setServoY(yMin);
+		setElevation(yMin);
 	}
 	
 	// Adjust y axis until highest value is found
 	while (maxLightValue < 830 && yPosition < yMax) {
 		firstReading = getLightValue();
-		setServoY(yPosition + yIncrement);
+		setElevation(yPosition + yIncrement);
 		secondReading = getLightValue();
 
 		if (secondReading < firstReading && firstReading >= minLightValue) {
-			setServoY(yPosition - yIncrement);
+			setElevation(yPosition - yIncrement);
 			break;
 		}
 	}

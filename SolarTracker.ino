@@ -4,14 +4,10 @@
 #include <SoftwareSerial.h>
 #include <math.h>
 
-
 WiFiClient client;
 
 int xPosition;
 int yPosition;
-
-float azimuth;
-float elev;
 
 int xMin = 20;
 int xMax = 160;
@@ -76,8 +72,8 @@ void setup() {
 }
 
 void loop() {
-	// startTracking();
-	runTests();
+	startTracking();
+	// runTests();
 }
 
 /*
@@ -87,7 +83,15 @@ void runTests() {
 	// Make a request to dweet.io for stored data
 	getData();
 	parseResponse();
-	calculateSolarPosition(year, month, day, gmtHour, minutes);
+	setupReadableTime();
+	calculateSolarPosition();
+	printCalculations();
+	setData("x=" + String(xPosition) +
+				"&y=" + String(yPosition) +
+				"&light=" + String(getLightValue()) +
+				"&voltage=" + String(getVoltage()) +
+				"&time=" + getReadableTime() +
+				"&sunset=false");
 
 	delay(60000);
 }

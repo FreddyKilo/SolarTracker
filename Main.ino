@@ -42,8 +42,9 @@ void startTracking() {
 
 	// Set the current position based on latitude, time of day, and day of year
 	} else {
-		setRelativePositionX(0);
-		setRelativePositionY(0);
+		calculateSolarPosition();
+		setAzimuth(getAzimuth());
+		setElevation(getElevation());
 
 		// Store current values for freeboard.
 		setData("x=" + String(xPosition) +

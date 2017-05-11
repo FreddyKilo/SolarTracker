@@ -1,5 +1,7 @@
 
-float pi = 3.14159;
+int monthArraySize = 12;
+String months[12] = {"Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"};
+
 /*
 	Get the hour, minutes, and json String from a GET request
 */
@@ -22,9 +24,10 @@ void parseResponse() {
 
 		// Get the time and convert the hour to Arizona time
 		if (line.indexOf("Date:") > -1) {
-			timeOfDay = getSubstring(line, ' ', 5);
 			year = getSubstring(line, ' ', 4).toInt();
-			day = getSubstring(line, '{', 1).toInt();
+			month = getMonthNum(getSubstring(line, ' ', 3));
+			day = getSubstring(line, ' ', 2).toInt();
+			timeOfDay = getSubstring(line, ' ', 5);
 			hour = (getSubstring(timeOfDay, ':', 0).toInt() + 17) % 24;
 			gmtHour = getSubstring(timeOfDay, ':', 0).toInt();
 			minutes = (getSubstring(timeOfDay, ':', 1).toInt());
@@ -34,8 +37,7 @@ void parseResponse() {
 		if (line.indexOf('{') > -1) {
 			jsonContent = line.substring(line.indexOf("\"content\":{") + 11, line.indexOf("}"));
 			date = line.substring(line.indexOf("\"created\":") + 10, line.indexOf(",\"content\""));
-			month = getSubstring(date, '-', 1).toInt();
-			day = date.substring(9, date.indexOf("T")).toInt();
+			// month = getSubstring(date, '-', 1).toInt();
 		}
 	}
 }
@@ -117,17 +119,11 @@ String getSubstring(String line, char separator, int index) {
 	return (found > index ? line.substring(strIndex[0], strIndex[1]) : "");
 }
 
-float getLengthOfDay(float latitude, float earthTilt) {
-	return 12 + asin(
-			(sin(getRadians(latitude)) * sin(getRadians(earthTilt))) /
-			(sin(getRadians(90 - earthTilt)) * cos(getRadians(latitude)))) / 
-			getRadians(90) * 12;
-}
-
-float getRadians(float angle) {
-	return angle * (pi / 180);
-}
-
-float getAngleByRadians(float radians) {
-	return radians * (180 / pi);
+int getMonthNum(String month) {
+	for (int i = 0; i < 12; i++) {
+		if (month == months[i]) {
+			return i + 1;
+		}
+	}
+	return -1;
 }
