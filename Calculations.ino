@@ -64,8 +64,10 @@ long JulianDate(int year, int month, int day) {
 	return JD_whole;
 }
 
-float getLengthOfDay(float latitude, float earthTilt) {
-	return 12 + asin(
+float getLengthOfDay(int dayOfYear) {
+	int daysSinceSpring = (dayOfYear + 286) % 365;
+	float earthTilt = sin(daysSinceSpring * .01676) * 23.44;
+	return 12.17 + asin(
 			(sin(getRadians(latitude)) * sin(getRadians(earthTilt))) /
 			(sin(getRadians(90 - earthTilt)) * cos(getRadians(latitude)))) / 
 			getRadians(90) * 12;

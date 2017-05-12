@@ -40,11 +40,11 @@ void startTracking() {
 	if (!connected || debugMode) {
 		setOptimalPostion();
 
-	// Set the current position based on latitude, time of day, and day of year
+	// Set the current position based on lat, lon, time of day, and day of year
 	} else {
 		calculateSolarPosition();
-		setAzimuth(getAzimuth());
-		setElevation(getElevation());
+		setAzimuth(getAzimuth(), 0);
+		setElevation(getElevation(), 2000);
 
 		// Store current values for freeboard.
 		setData("x=" + String(xPosition) +

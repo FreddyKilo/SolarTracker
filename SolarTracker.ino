@@ -72,8 +72,9 @@ void setup() {
 }
 
 void loop() {
-	startTracking();
+	// startTracking();
 	// runTests();
+	testCalculations();
 }
 
 /*

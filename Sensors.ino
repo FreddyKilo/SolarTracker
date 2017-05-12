@@ -2,7 +2,6 @@
 float getCurrent() {
 	// switch to battery current input
 	digitalWrite(D2, HIGH);
-	delay(100);
 	int sensorValue = analogRead(A0);
 
 	// Calculate current with reading, somehow
@@ -15,7 +14,6 @@ float getCurrent() {
 float getVoltage() {
 	// switch to battery voltage input
 	digitalWrite(D3, HIGH);
-	delay(100);
 	int sensorValue = analogRead(A0);
 
 	// At 4.2v (max battery voltage) we get a reading of around 710
@@ -31,7 +29,6 @@ float getVoltage() {
 int getLightValue() {
 	// switch to ldr sensor
 	digitalWrite(D4, HIGH);
-	// delay(100);
 	int sensorValue = analogRead(A0);
 
 	// Keep track of hightest reading
