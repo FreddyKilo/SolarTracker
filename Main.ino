@@ -11,9 +11,9 @@ void startTracking() {
 // =================== NIGHT TIME =====================
 // ====================================================
 
-	// If the time is past 6pm (about sunset) and before 7am (about sunrise), stop
+	// If the time is past sunset and before sunrise, stop
 	// tracking and get the voltage reading periodically to monitor on freeboard
-	if (hour < 7 || hour > 18) {
+	if (getCurrentMinutes() < getSunrise() || getCurrentMinutes() > getSunset()) {
 		setNeutralPosition();
 		setData("x=" + String(xPosition) +
 				"&y=" + String(yPosition) +

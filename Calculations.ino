@@ -3,8 +3,11 @@
 #define PI 3.141592654
 #define TWOPI 6.28318531
 
+int monthDayOfYear[12] = {0,31,59,90,120,151,181,212,243,273,304,334};
+float latitude = 33.4484;
+
 float Lon = -112.0740 * DEG_TO_RAD;
-float Lat = 33.4484 * DEG_TO_RAD;
+float Lat = latitude * DEG_TO_RAD;
 float T, JD_frac, L0, M, e, C, L_true, f, R, GrHrAngle, Obl, RA, Decl, HrAngle;
 long JD_whole, JDx;
 float azimuth;
@@ -45,6 +48,20 @@ float getElevation() {
 	return getAngleByRadians(elev);
 }
 
+int getSunrise() {
+	int minuteOfDay = (12 - (getLengthOfDay(monthDayOfYear[month] + day) / 2)) * 60;
+	return minuteOfDay;
+}
+
+int getSunset() {
+	int minuteOfDay = (12 + (getLengthOfDay(monthDayOfYear[month] + day) / 2)) * 60;
+	return minuteOfDay;
+}
+
+int getCurrentMinutes() {
+	return (hour * 60) + minutes;
+}
+
 /*
 	If using an esp8266, use this in lue of fmod() due to
 	a bug in libm.a that causes a compile error
@@ -64,10 +81,14 @@ long JulianDate(int year, int month, int day) {
 	return JD_whole;
 }
 
+/*
+	Get the current length of day in hours. This calculates from when the midpoint of the sun
+	has crested the horizon to when the midpoint of the sun has fallen to the horizon
+*/
 float getLengthOfDay(int dayOfYear) {
 	int daysSinceSpring = (dayOfYear + 286) % 365;
 	float earthTilt = sin(daysSinceSpring * .01676) * 23.44;
-	return 12.17 + asin(
+	return 12 + asin(
 			(sin(getRadians(latitude)) * sin(getRadians(earthTilt))) /
 			(sin(getRadians(90 - earthTilt)) * cos(getRadians(latitude)))) / 
 			getRadians(90) * 12;
