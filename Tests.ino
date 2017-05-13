@@ -27,9 +27,5 @@ void testServos() {
 }
 
 void testCalculations() {
-  int dayOfCycle = getDaysSinceSpringEquinox(130);
-  float tilt = sin(dayOfCycle * .01676) * 23.5;
-  float lod = getLengthOfDay(33.4484, tilt);
-  Serial.println("length of day: " + String(lod));
   delay(10000);
 }
