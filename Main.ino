@@ -22,11 +22,10 @@ void startTracking() {
 				"&time=" + getReadableTime() +
 				"&sunset=true");
 		Serial.println("Sleeping overnight...");
-		if (hour == 6) {
+		if (getSunrise() - getCurrentMinutes() < 60) {
 			// For whatever reason, deepSleep wakes up a bit earlier than expected.
 			// This should guarantee waking a few minutes after morning wake time
-			int secondsTilMorning = (63 - minutes) * 60;
-			ESP.deepSleep(secondsTilMorning * oneSecond);
+			ESP.deepSleep(getSunrise() - getCurrentMinutes() + 3);
 		}
 		// Sleep for an hour
 		ESP.deepSleep(nightSleepTime * oneSecond);

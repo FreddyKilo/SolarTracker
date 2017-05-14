@@ -27,5 +27,8 @@ void testServos() {
 }
 
 void testCalculations() {
-  delay(10000);
+  getData();
+  parseResponse();
+  calculateSolarPosition();
+  delay(60000); 
 }

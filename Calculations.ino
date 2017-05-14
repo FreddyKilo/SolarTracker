@@ -3,11 +3,12 @@
 #define PI 3.141592654
 #define TWOPI 6.28318531
 
-int monthDayOfYear[12] = {0,31,59,90,120,151,181,212,243,273,304,334};
+int monthDayOfYear[13] = {0, 0, 31, 59, 90, 120, 151, 181, 212, 243, 273, 304, 334};
 float latitude = 33.4484;
+float meridian = 12.42;
 
 float Lon = -112.0740 * DEG_TO_RAD;
-float Lat = latitude * DEG_TO_RAD;
+float Lat = 33.4484 * DEG_TO_RAD;
 float T, JD_frac, L0, M, e, C, L_true, f, R, GrHrAngle, Obl, RA, Decl, HrAngle;
 long JD_whole, JDx;
 float azimuth;
@@ -20,7 +21,7 @@ float elev;
 */
 void calculateSolarPosition() {
 	JD_whole = JulianDate(year, month, day);
-	JD_frac = (gmtHour + minutes / 60.0 / 3600.0) / 24.0 - 0.5;
+	JD_frac = (gmtHour + minutes / 60.0) / 24.0 - 0.5;
 	T = JD_whole - 2451545; T = (T + JD_frac) / 36525.;
 	L0 = DEG_TO_RAD * floatmod(280.46645 + 36000.76983 * T, 360.0);
 	M = DEG_TO_RAD * floatmod(357.5291 + 35999.0503 * T, 360.0);
@@ -38,6 +39,7 @@ void calculateSolarPosition() {
 	HrAngle = DEG_TO_RAD * GrHrAngle + Lon - RA;
 	azimuth = PI + atan2(sin(HrAngle), cos(HrAngle) * sin(Lat) - tan(Decl) * cos(Lat));
 	elev = asin(sin(Lat) * sin(Decl) + cos(Lat) * (cos(Decl) * cos(HrAngle)));
+	printCalculations();
 }
 
 float getAzimuth() {
@@ -49,12 +51,12 @@ float getElevation() {
 }
 
 int getSunrise() {
-	int minuteOfDay = (12 - (getLengthOfDay(monthDayOfYear[month] + day) / 2)) * 60;
+	int minuteOfDay = (meridian - (getLengthOfDay(monthDayOfYear[month] + day) / 2)) * 60;
 	return minuteOfDay;
 }
 
 int getSunset() {
-	int minuteOfDay = (12 + (getLengthOfDay(monthDayOfYear[month] + day) / 2)) * 60;
+	int minuteOfDay = (meridian + (getLengthOfDay(monthDayOfYear[month] + day) / 2)) * 60;
 	return minuteOfDay;
 }
 
@@ -111,7 +113,6 @@ int getLinearOutput(int x1, int x2, int y1, int y2, float input) {
 	float yIntercept = y1 - slope * x1;
 	return slope * input + yIntercept;
 }
-
 
 void printCalculations() {
 	Serial.println("");
