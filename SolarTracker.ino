@@ -35,7 +35,7 @@ String strMinutes;
 String timeSuffix = "a";
 String timeOfDay = "";
 
-int daySleepTime = 1200;   // 600 sec = 10 min
+int daySleepTime = 600;   // 600 sec = 10 min
 int nightSleepTime = 3600; // 3600 sec = 1 hour
 unsigned long oneSecond = 1000000L;
 

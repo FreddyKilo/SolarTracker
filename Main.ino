@@ -22,10 +22,11 @@ void startTracking() {
 				"&time=" + getReadableTime() +
 				"&sunset=true");
 		Serial.println("Sleeping overnight...");
-		if (getSunrise() - getCurrentMinutes() < 60) {
-			// For whatever reason, deepSleep wakes up a bit earlier than expected.
-			// This should guarantee waking a few minutes after morning wake time
-			ESP.deepSleep(getSunrise() - getCurrentMinutes() + 3);
+		// If it's after midnight and there is less than an hour before sunrise
+		if (getSunrise() - getCurrentMinutes() >= 0 && getSunrise() - getCurrentMinutes() < 60) {
+			// Wake up a little after sunrise
+			int secondsUntilSunrise = (getSunrise() + 3 - getCurrentMinutes()) * 60;
+			ESP.deepSleep(secondsUntilSunrise * oneSecond);
 		}
 		// Sleep for an hour
 		ESP.deepSleep(nightSleepTime * oneSecond);
@@ -43,7 +44,7 @@ void startTracking() {
 	} else {
 		calculateSolarPosition();
 		setAzimuth(getAzimuth(), 0);
-		setElevation(getElevation(), 2000);
+		setElevation(getElevation(), 3000);
 
 		// Store current values for freeboard.
 		setData("x=" + String(xPosition) +
