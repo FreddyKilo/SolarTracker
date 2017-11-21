@@ -35,11 +35,11 @@ String strMinutes;
 String timeSuffix = "a";
 String timeOfDay = "";
 
-int daySleepTime = 600;   // 600 sec = 10 min
+int daySleepTime = 1200;   // 600 sec = 10 min
 int nightSleepTime = 3600; // 3600 sec = 1 hour
 unsigned long oneSecond = 1000000L;
 
-bool debugMode = false;
+bool stationaryMode = false;
 bool connected;
 
 // Servo controller communication
@@ -72,27 +72,23 @@ void setup() {
 }
 
 void loop() {
-	startTracking();
-	// runTests();
-	// testCalculations();
+	// // Make a request to dweet.io for stored data
+	// getData();
+	// // Pick out all the valuable data we need from the server response
+	// parseResponse();
+	// // Set up the time variables to be able to format to a human readable time
+	// setupReadableTime();
+
+	// startTracking();
+
+	runTests();
+
 }
 
 /*
 	Test method
 */
 void runTests() {
-	// Make a request to dweet.io for stored data
-	getData();
-	parseResponse();
-	setupReadableTime();
-	calculateSolarPosition();
-	printCalculations();
-	setData("x=" + String(xPosition) +
-				"&y=" + String(yPosition) +
-				"&light=" + String(getLightValue()) +
-				"&voltage=" + String(getVoltage()) +
-				"&time=" + getReadableTime() +
-				"&sunset=false");
-
+	testPubNub();
 	delay(60000);
 }

@@ -124,5 +124,5 @@ int getMonthNum(String month) {
 			return i;
 		}
 	}
-	return -1;
+	return 0;
 }

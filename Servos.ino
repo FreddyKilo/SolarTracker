@@ -41,6 +41,11 @@ void setNeutralPosition() {
 	setElevation(90, 4000);
 }
 
+void setStationaryPosition() {
+	setAzimuth(180, 0);
+	setElevation(76, 0);
+}
+
 /*
 	Get the x position relative to the current time
 	The Earth spins 1 degree every 4 minutes
