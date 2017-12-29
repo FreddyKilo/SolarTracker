@@ -1,6 +1,5 @@
 
-int monthArraySize = 12;
-String months[12] = {"Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"};
+String months[13] = {"", "Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"};
 
 /*
 	Get the hour, minutes, and json String from a GET request
@@ -120,10 +119,10 @@ String getSubstring(String line, char separator, int index) {
 }
 
 int getMonthNum(String month) {
-	for (int i = 0; i < 12; i++) {
+	for (int i = 0; i < sizeof(months); i++) {
 		if (month == months[i]) {
-			return i + 1;
+			return i;
 		}
 	}
-	return -1;
+	return 0;
 }

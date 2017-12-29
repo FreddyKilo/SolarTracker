@@ -5,7 +5,7 @@
 	This data will be stored and can later be retrieved as Json using getData()
 */
 void setData(String params) {
-	connectToServer();
+	connectToDweet();
 	if (connected) {
 		Serial.println("");
 		Serial.println("Sending dweet");
@@ -13,7 +13,6 @@ void setData(String params) {
 								 "Host: " + "dweet.io" + "\r\n" +
 								 "Connection: close\r\n\r\n");
 	}
-		
 }
 
 /*
@@ -21,7 +20,7 @@ void setData(String params) {
 	with parseResponse()
 */
 void getData() {
-	connectToServer();
+	connectToDweet();
 	if (connected) {
 		Serial.println("");
 		Serial.println("Getting dweet");
@@ -29,17 +28,35 @@ void getData() {
 								 "Host: " + "dweet.io" + "\r\n" +
 								 "Connection: close\r\n\r\n");
 	}
-	
 }
 
 /*
 	Connect to dweet.io, this is where we will store our data
 */
-void connectToServer() {
+void connectToDweet() {
 	if (!client.connect("dweet.io", 80)) {
 		Serial.println("connection failed");
 		connected = false;
 		return;
 	}
 	connected = true;
+}
+
+void connectToPubNub() {
+	if (!client.connect("pubsub.pubnub.com", 80)) {
+		Serial.println("connection failed");
+		connected = false;
+		return;
+	}
+	connected = true;
+}
+
+void postFreeboardValues() {
+	// Store current values for freeboard.
+	setData("x=" + String(xPosition) +
+			"&y=" + String(yPosition) +
+			"&light=" + String(getLightValue()) +
+			"&voltage=" + String(getVoltage()) +
+			"&time=" + getReadableTime() +
+			"&sunset=false");
 }
