@@ -9,14 +9,11 @@ WiFiClient client;
 int xPosition;
 int yPosition;
 
+// These are set for mechanical limitations to the X and Y axes
 int xMin = 20;
 int xMax = 160;
 int yMin = 90;
 int yMax = 135;
-
-int xIncrement = 8;
-int yIncrement = 8;
-int relativeThreshold = 20;
 
 int maxLightValue = 0;
 int minLightValue = 400;
@@ -35,12 +32,13 @@ String strMinutes;
 String timeSuffix = "a";
 String timeOfDay = "";
 
-int daySleepTime = 1200;   // 600 sec = 10 min
-int nightSleepTime = 3600; // 3600 sec = 1 hour
-unsigned long oneSecond = 1000000L;
+unsigned long oneSecond = 1030000L; // The ESP8266 RTC is a little off and we need to compensate for it
+int daySleepTime = 900 * oneSecond;   // 600 sec = 10 min
+int nightSleepTime = 3600 * oneSecond; // 3600 sec = 1 hour
 
 bool stationaryMode = false;
 bool connected;
+bool debug = true;
 
 // Servo controller communication
 SoftwareSerial maestroSerial(D6, D5);
@@ -68,27 +66,25 @@ void setup() {
 
 	// Connect to WiFi network
 	int credCode = 1;
-	// WiFi.begin(getSsid(credCode), getPassword(credCode));
+	WiFi.begin(getSsid(credCode), getPassword(credCode));
 }
 
 void loop() {
-	// // Make a request to dweet.io for stored data
-	// getData();
-	// // Pick out all the valuable data we need from the server response
-	// parseResponse();
-	// // Set up the time variables to be able to format to a human readable time
-	// setupReadableTime();
+	// Make a request to dweet.io for stored data
+	getData();
+	// Pick out all the valuable data we need from the server response
+	parseResponse();
+	// Set up the time variables to be able to format to a human readable time
+	setupReadableTime();
 
-	// startTracking();
+	startTracking();
 
-	runTests();
-
+	// runTests();
 }
 
 /*
 	Test method
 */
 void runTests() {
-	testPubNub();
-	delay(60000);
+	delay(2000);
 }

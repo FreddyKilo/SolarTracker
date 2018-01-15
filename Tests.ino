@@ -5,6 +5,9 @@ void testReadings() {
 
   Serial.println("Light: " + String(getLightValue()));
   delay(400);
+
+  Serial.println("Current: " + String(getCurrent()));
+  delay(400);
 }
 
 void testJson() {
@@ -31,18 +34,4 @@ void testCalculations() {
   parseResponse();
   calculateSolarPosition();
   delay(60000); 
-}
-
-void testPubNub() {
-  connectToPubNub();
-  client.print(String("GET /publish/pub-c-3b242e5e-131b-4684-aba1-aa869f2f0be5/sub-c-98b69416-3f65-11e7-a9cb-02ee2ddab7fe/test/hello_earth/test/%22Hello%20World%22") +
-                      " HTTP/1.1\r\n" +
-                      "Host: " + "pubsub.pubnub.com" + "\r\n" +
-                      "Connection: close\r\n\r\n");
-  while (client.available()) {
-    String line = client.readStringUntil('\r');
-    // Print each line from the server response
-    Serial.println(line);
-  }
-
 }

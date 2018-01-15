@@ -42,17 +42,10 @@ void connectToDweet() {
 	connected = true;
 }
 
-void connectToPubNub() {
-	if (!client.connect("pubsub.pubnub.com", 80)) {
-		Serial.println("connection failed");
-		connected = false;
-		return;
-	}
-	connected = true;
-}
-
 void postFreeboardValues() {
 	// Store current values for freeboard.
+	Serial.println("");
+	Serial.println("Posting to freeboard...");
 	setData("x=" + String(xPosition) +
 			"&y=" + String(yPosition) +
 			"&light=" + String(getLightValue()) +
