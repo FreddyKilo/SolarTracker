@@ -6,10 +6,12 @@ float getCurrent() {
 	int sensorValue = analogRead(A0);
 
 	// Calculate current with reading, somehow
-	float current = 1.0;
+	float voltage = sensorValue * (3.3 / 1024.0);
+	float amps = (voltage - 2.5) / .185;
+	float milliamps = amps * 1000.0
 
 	digitalWrite(D2, LOW);
-	return current;
+	return milliamps;
 }
 
 float getVoltage() {
