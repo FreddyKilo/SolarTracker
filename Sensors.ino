@@ -4,11 +4,12 @@ float getCurrent() {
 	digitalWrite(D2, HIGH);
 	delay(1000);
 	int sensorValue = analogRead(A0);
+	Serial.println("Current sensor value reading: " + String(sensorValue));
 
-	// Calculate current with reading, somehow
-	float voltage = sensorValue * (3.3 / 1024.0);
-	float amps = (voltage - 2.5) / .185;
-	float milliamps = amps * 1000.0
+	// Calculate current for Pololu ACS714 Current Sensor Carrier
+	double voltage = sensorValue * (3.3 / 1024.0);
+	double amps = (voltage - 2.455) / .185;
+	int milliamps = amps * 1000;
 
 	digitalWrite(D2, LOW);
 	return milliamps;
@@ -35,11 +36,6 @@ int getLightValue() {
 	digitalWrite(D4, HIGH);
 	delay(1000);
 	int sensorValue = analogRead(A0);
-
-	// Keep track of hightest reading
-	if (sensorValue > maxLightValue) {
-		maxLightValue = sensorValue;
-	}
 
 	digitalWrite(D4, LOW);
 	return sensorValue;

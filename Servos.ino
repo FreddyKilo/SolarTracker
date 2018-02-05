@@ -16,7 +16,7 @@ void setAzimuth(float degrees, int waitMillis) {
 }
 
 /*
-	Channel 2
+	Channel 3
 	90 deg = 1472
 	0 deg = 2366
 */

@@ -41,6 +41,10 @@ void parseResponse() {
 	}
 }
 
+void parseModemResponse(String response) {
+	
+}
+
 void setupReadableTime() {
 	// If we didn't get a time value from the response, reset and try again in 5 minuites. Obtaining current time is critical
 	if (timeOfDay.equals("")) {
@@ -125,4 +129,11 @@ int getMonthNum(String month) {
 		}
 	}
 	return 0;
+}
+
+void blink(int length, int interval) {
+	digitalWrite(LED_BUILTIN, LOW);
+	delay(length);
+	digitalWrite(LED_BUILTIN, HIGH);
+	delay(interval - length);
 }

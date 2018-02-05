@@ -13,6 +13,10 @@ void setData(String params) {
 								 "Host: " + "dweet.io" + "\r\n" +
 								 "Connection: close\r\n\r\n");
 	}
+	// Not sure why we need to do this, but there is a case where the ESP goes to 
+	// sleep before the request has been sent, so let's wait here a few seconds
+	// before continuing to ensure the request gets sent
+	delay(2000);
 }
 
 /*
@@ -50,6 +54,7 @@ void postFreeboardValues() {
 			"&y=" + String(yPosition) +
 			"&light=" + String(getLightValue()) +
 			"&voltage=" + String(getVoltage()) +
+			"&current=" + String(getCurrent()) +
 			"&time=" + getReadableTime() +
 			"&sunset=false");
 }

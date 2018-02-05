@@ -9,15 +9,6 @@ WiFiClient client;
 int xPosition;
 int yPosition;
 
-// These are set for mechanical limitations to the X and Y axes
-int xMin = 20;
-int xMax = 160;
-int yMin = 90;
-int yMax = 135;
-
-int maxLightValue = 0;
-int minLightValue = 400;
-
 String date;
 int year;
 int month;
@@ -32,24 +23,32 @@ String strMinutes;
 String timeSuffix = "a";
 String timeOfDay = "";
 
-unsigned long oneSecond = 1030000L; // The ESP8266 RTC is a little off and we need to compensate for it
-int daySleepTime = 900 * oneSecond;   // 600 sec = 10 min
+unsigned long oneSecond = 1040000L; // The ESP8266 RTC is a little off and we need to compensate for it
+int daySleepTime = 600 * oneSecond;   // 600 sec = 10 min
 int nightSleepTime = 3600 * oneSecond; // 3600 sec = 1 hour
 
 bool stationaryMode = false;
 bool connected;
-bool debug = true;
+bool debug = false;
+
+int credCode = 1;
 
 // Servo controller communication
-SoftwareSerial maestroSerial(D6, D5);
+SoftwareSerial maestroSerial(-1, D7); // we only need to send data to the servo controller
 MicroMaestro maestro(maestroSerial);
+
+SoftwareSerial SIM800Serial(D5, D6);
 
 /*
 	Setup for application
 */
 void setup() {
-	Serial.begin(115200);
+	Serial.begin(19200);
+	SIM800Serial.begin(19200);
 	maestroSerial.begin(9600);
+
+	// Set up reset pin for SIM800 module
+	pinMode(D1, OUTPUT); // reset
 
 	// Declare all pins used for swiching inputs to analogRead(A0)
 	// D2 - switch for current from solar panel reading
@@ -60,25 +59,35 @@ void setup() {
 	pinMode(D4, OUTPUT);
 
 	// Initially set all pins to off
+	digitalWrite(D1, LOW);
 	digitalWrite(D2, LOW);
 	digitalWrite(D3, LOW);
 	digitalWrite(D4, LOW);
 
-	// Connect to WiFi network
-	int credCode = 1;
+	// First, try to connect to WiFi
+	Serial.print("Obtaining WiFi connection");
+	WiFi.mode(WIFI_STA);
 	WiFi.begin(getSsid(credCode), getPassword(credCode));
+	unsigned long timerStart = millis();
+	while(millis() - timerStart < 10000) {
+		blink(50, 200);
+		Serial.print(".");
+		if(WiFi.status() == WL_CONNECTED) {
+			Serial.println("");
+			Serial.print("WiFi IP address: ");
+			Serial.println(WiFi.localIP());
+			startWithWiFi();
+		}
+	}
+
+	// If no WiFi connection, use cellular modem
+	if(WiFi.status() != WL_CONNECTED) {
+		startWithModem();
+	}
+	
 }
 
 void loop() {
-	// Make a request to dweet.io for stored data
-	getData();
-	// Pick out all the valuable data we need from the server response
-	parseResponse();
-	// Set up the time variables to be able to format to a human readable time
-	setupReadableTime();
-
-	startTracking();
-
 	// runTests();
 }
 
@@ -86,5 +95,10 @@ void loop() {
 	Test method
 */
 void runTests() {
-	delay(2000);
+	restartModem();
+	startUp();
+	connect();
+	sendGetRequestToDweet();
+
+	delay(2000000);
 }

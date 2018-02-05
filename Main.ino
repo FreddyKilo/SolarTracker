@@ -1,5 +1,12 @@
 
-void startTracking() {
+void startWithWiFi() {
+
+	// Make a request to dweet.io for stored data
+	getData();
+	// Pick out all the valuable data we need from the server response
+	parseResponse();
+	// Set up the time variables to be able to format to a human readable time
+	setupReadableTime();
 	
 // ====================================================
 // =================== NIGHT TIME =====================
@@ -13,6 +20,7 @@ void startTracking() {
 				"&y=" + String(yPosition) +
 				"&light=" +
 				"&voltage=" + String(getVoltage()) +
+				"&current=" + String(getCurrent()) +
 				"&time=" + getReadableTime() +
 				"&sunset=true");
 		Serial.println("Sleeping overnight...");
@@ -39,11 +47,19 @@ void startTracking() {
 	// Set the current position based on lat, lon, time of day, and day of year
 	} else {
 		calculateSolarPosition();
-		setAzimuth(getAzimuth(), 0);
+		setAzimuth(getAzimuth(), 1000);
 		setElevation(getElevation(), 3000);
 	}
 
 	postFreeboardValues();
 	Serial.println("Taking a nap...");
 	ESP.deepSleep(daySleepTime - (millis() * 1030));
+}
+
+void startWithModem() {
+	restartModem();
+	startUp();
+	connect();
+	sendGetRequestToDweet();
+	// TODO: need to figure out how to read the response header to get the date and time
 }
