@@ -24,7 +24,7 @@ String timeSuffix = "a";
 String timeOfDay = "";
 
 unsigned long oneSecond = 1040000L; // The ESP8266 RTC is a little off and we need to compensate for it
-int daySleepTime = 600 * oneSecond;   // 600 sec = 10 min
+int daySleepTime = 60 * oneSecond;   // 600 sec = 10 min
 int nightSleepTime = 3600 * oneSecond; // 3600 sec = 1 hour
 
 bool stationaryMode = false;
@@ -65,40 +65,41 @@ void setup() {
 	digitalWrite(D4, LOW);
 
 	// First, try to connect to WiFi
-	Serial.print("Obtaining WiFi connection");
-	WiFi.mode(WIFI_STA);
-	WiFi.begin(getSsid(credCode), getPassword(credCode));
-	unsigned long timerStart = millis();
-	while(millis() - timerStart < 10000) {
-		blink(50, 200);
-		Serial.print(".");
-		if(WiFi.status() == WL_CONNECTED) {
-			Serial.println("");
-			Serial.print("WiFi IP address: ");
-			Serial.println(WiFi.localIP());
-			startWithWiFi();
-		}
-	}
+	// Serial.print("Obtaining WiFi connection");
+	// WiFi.mode(WIFI_STA);
+	// WiFi.begin(getSsid(credCode), getPassword(credCode));
+	// unsigned long timerStart = millis();
+	// while(millis() - timerStart < 10000) {
+	// 	blink(50, 200);
+	// 	Serial.print(".");
+	// 	if(WiFi.status() == WL_CONNECTED) {
+	// 		Serial.println("");
+	// 		Serial.print("WiFi IP address: ");
+	// 		Serial.println(WiFi.localIP());
+	// 		startWithWiFi();
+	// 	}
+	// }
 
 	// If no WiFi connection, use cellular modem
-	if(WiFi.status() != WL_CONNECTED) {
+	// if(WiFi.status() != WL_CONNECTED) {
 		startWithModem();
-	}
-	
+	// }
+	// Serial.println("Enter AT commands now:");
 }
 
 void loop() {
-	// runTests();
+	// serialComms();
 }
 
-/*
-	Test method
-*/
-void runTests() {
-	restartModem();
-	startUp();
-	connect();
-	sendGetRequestToDweet();
+void serialComms() {
+	if(SIM800Serial.available()){
+		Serial.write(SIM800Serial.read());
+	}
+	if(Serial.available()){
+		SIM800Serial.write(Serial.read());
+	}
+}
 
-	delay(2000000);
+void runTests() {
+
 }

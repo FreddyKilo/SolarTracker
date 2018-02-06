@@ -4,7 +4,7 @@ String months[13] = {"", "Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug",
 /*
 	Get the hour, minutes, and json String from a GET request
 */
-void parseResponse() {
+void parseResponseFromWifi() {
 	unsigned long timeout = millis();
 
 	while (client.available() == 0) {
@@ -33,16 +33,23 @@ void parseResponse() {
 		}
 
 		// Get the content from response Json
-		if (line.indexOf('{') > -1) {
-			jsonContent = line.substring(line.indexOf("\"content\":{") + 11, line.indexOf("}"));
-			date = line.substring(line.indexOf("\"created\":") + 10, line.indexOf(",\"content\""));
-			// month = getSubstring(date, '-', 1).toInt();
-		}
+		// if (line.indexOf('{') > -1) {
+		// 	jsonContent = line.substring(line.indexOf("\"content\":{") + 11, line.indexOf("}"));
+		// 	date = line.substring(line.indexOf("\"created\":") + 10, line.indexOf(",\"content\""));
+		// 	// month = getSubstring(date, '-', 1).toInt();
+		// }
 	}
 }
 
-void parseModemResponse(String response) {
-	
+void parseDateTimeFromModem() {
+	String dateTime = sim800GetDateTime();
+	year = getSubstring(dateTime, '/', 0).toInt() + 2000;
+	month = getSubstring(dateTime, '/', 1).toInt();
+	day = getSubstring(dateTime, '/', 2).toInt();
+	timeOfDay = getSubstring(dateTime, ',', 1);
+	hour = getSubstring(timeOfDay, ':', 0).toInt();
+	gmtHour = (getSubstring(timeOfDay, ':', 0).toInt() + 7) % 24;
+	minutes = (getSubstring(timeOfDay, ':', 1).toInt());
 }
 
 void setupReadableTime() {
@@ -136,4 +143,13 @@ void blink(int length, int interval) {
 	delay(length);
 	digitalWrite(LED_BUILTIN, HIGH);
 	delay(interval - length);
+}
+
+void delayWithBlink(int waitSeconds, String message) {
+	Serial.print(message);
+
+	for(int i = 0; i < waitSeconds; i++) {
+		blink(30, 1000);
+		Serial.print(".");
+	}
 }

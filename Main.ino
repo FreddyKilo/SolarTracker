@@ -4,7 +4,7 @@ void startWithWiFi() {
 	// Make a request to dweet.io for stored data
 	getData();
 	// Pick out all the valuable data we need from the server response
-	parseResponse();
+	parseResponseFromWifi();
 	// Set up the time variables to be able to format to a human readable time
 	setupReadableTime();
 	
@@ -57,9 +57,15 @@ void startWithWiFi() {
 }
 
 void startWithModem() {
-	restartModem();
-	startUp();
-	connect();
-	sendGetRequestToDweet();
-	// TODO: need to figure out how to read the response header to get the date and time
+	// sim800Restart();
+	sim800StartUp();
+	// parseDateTimeFromModem();
+	// calculateSolarPosition();
+	// setAzimuth(getAzimuth(), 1000);
+	// setElevation(getElevation(), 3000);
+	sim800Connect();
+	sim800PostToDweet();
+	// sim800TearDown();
+	// Serial.println("Sleeping for a minute...");
+	// ESP.deepSleep(daySleepTime);
 }

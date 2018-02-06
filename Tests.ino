@@ -12,7 +12,7 @@ void testReadings() {
 
 void testJson() {
   getData();
-  parseResponse();
+  parseResponseFromWifi();
   Serial.println("Value from \"voltage\": " + getJsonValue("voltage"));
   Serial.println("Value from \"sunset\": " + getJsonValue("sunset"));
   Serial.println("Value from \"time\": " + getJsonValue("time"));
@@ -31,7 +31,7 @@ void testServos() {
 
 void testCalculations() {
   getData();
-  parseResponse();
+  parseResponseFromWifi();
   calculateSolarPosition();
   delay(60000); 
 }
